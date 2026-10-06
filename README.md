@@ -1,31 +1,38 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# Odometer
+**Track car maintenance by mileage and time — whichever comes first.**
+Odometer is a Kotlin Multiplatform app (Android + iOS, shared UI via Compose Multiplatform) for keeping your car's maintenance schedule under control. Every task — oil change, brake pads, timing belt — is tracked against both a mileage interval and an optional time interval, and its status is colored by whichever limit is closer: calm teal when there's plenty of room, amber once you enter the reminder window, red once it's overdue.
+*(Russian version: [README.ru.md](README.ru.md))*
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+## Screenshots
+<p align="center">
+  <img src="docs/screenshots/cars_light.png" width="170" alt="My Cars" />
+  <img src="docs/screenshots/tasks_light.png" width="170" alt="Maintenance Tasks" />
+  <img src="docs/screenshots/add_light.png" width="170" alt="Add Car" />
+  <img src="docs/screenshots/history_light.png" width="170" alt="Service History" />
+  <img src="docs/screenshots/settings_light.png" width="170" alt="Settings" />
+</p>
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+<p align="center">
+  <img src="docs/screenshots/cars_dark.png" width="170" alt="My Cars — dark theme" />
+  <img src="docs/screenshots/tasks_dark.png" width="170" alt="Maintenance Tasks — dark theme" />
+  <img src="docs/screenshots/add_dark.png" width="170" alt="Add Car — dark theme" />
+  <img src="docs/screenshots/history_dark.png" width="170" alt="Service History — dark theme" />
+  <img src="docs/screenshots/settings_dark.png" width="170" alt="Settings — dark theme" />
+</p>
 
-### Running the apps
+## Features
+- **Multi-car garage** — a list of all your cars with a gauge-ring indicator showing how many tasks are soon-due or overdue at a glance.
+- **Dual-axis reminders** — every task tracks a mileage interval and, optionally, a time interval (months); status is driven by whichever limit is reached first, which matters for things like engine oil that age even if the car sits idle.
+- **Three-tier color status** — OK / Soon / Overdue, with a consistent color language across the entire app and both themes.
+- **Service history log** — every completed task is recorded with date, mileage, cost and service center, so you can look back at what was done and when.
+- **One-tap "mark as done"** — update a task straight from the task list; progress and status recalculate instantly, no form required.
+- **Quick mileage edit** — update your current mileage inline on the car screen without opening a full edit form.
+- **Maintenance presets** — add a new car with ready-made task templates (oil, pads, air filter, timing belt) instead of typing every interval by hand.
+- **Local push notifications** — get notified when a task enters its reminder window or becomes overdue, with anti-spam throttling so the same task doesn't repeat too often.
+- **Light / dark / system theme** and **km / mi** unit switch.
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+## Tech stack
+Kotlin Multiplatform · Compose Multiplatform (shared UI) · SQLDelight (local DB) · Koin (DI) — targeting Android and iOS from a single codebase.
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
-
-### Running tests
-
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
-
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
-
----
-
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## Status
+In active development. See the design mockup and development plan for the full roadmap.
