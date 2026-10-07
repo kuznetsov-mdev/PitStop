@@ -3,20 +3,24 @@ package ru.kuznetsov.pitstop
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,6 +28,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ru.kuznetsov.pitstop.ui.components.AppIconButton
+import ru.kuznetsov.pitstop.ui.components.Fab
+import ru.kuznetsov.pitstop.ui.components.PresetChip
+import ru.kuznetsov.pitstop.ui.components.PrimaryButton
+import ru.kuznetsov.pitstop.ui.components.SegmentedControl
+import ru.kuznetsov.pitstop.ui.components.TabBarItem
 import ru.kuznetsov.pitstop.ui.icons.PitStopIcons
 import ru.kuznetsov.pitstop.ui.theme.PitStopColorScheme
 import ru.kuznetsov.pitstop.ui.theme.PitStopTheme
@@ -37,9 +47,9 @@ fun App() {
 }
 
 /**
- * Temporary verification screen for step 1 (theme & typography) — shows every color token
- * and font role so both light and dark themes can be eyeballed before any real screen exists.
- * Will be replaced by the navigation graph once screens land (step 3+).
+ * Temporary verification screen for steps 1–2 (theme, typography, ui-kit) — shows every color
+ * token, font role, icon and (so far) button component so both themes can be eyeballed before
+ * any real screen exists. Will be replaced by the navigation graph once screens land (step 3+).
  */
 @Composable
 private fun ThemeShowcase() {
@@ -52,6 +62,7 @@ private fun ThemeShowcase() {
             .background(colors.bg)
             .safeContentPadding()
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(dimens.spaceL),
         verticalArrangement = Arrangement.spacedBy(dimens.spaceL),
     ) {
@@ -101,12 +112,39 @@ private fun ThemeShowcase() {
             "sun" to PitStopIcons.Sun,
             "moonToggle" to PitStopIcons.MoonToggle,
         )
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(6),
-            horizontalArrangement = Arrangement.spacedBy(dimens.spaceS),
-            verticalArrangement = Arrangement.spacedBy(dimens.spaceS),
-        ) {
-            items(icons) { (label, icon) -> IconSwatch(label, icon, colors) }
+        icons.chunked(6).forEach { rowIcons ->
+            Row(horizontalArrangement = Arrangement.spacedBy(dimens.spaceS)) {
+                rowIcons.forEach { (label, icon) -> IconSwatch(label, icon, colors) }
+            }
+        }
+
+        Text("Кнопки", style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
+
+        PrimaryButton("Сохранить авто", onClick = {}, modifier = Modifier.fillMaxWidth())
+
+        Row(horizontalArrangement = Arrangement.spacedBy(dimens.spaceM), verticalAlignment = Alignment.CenterVertically) {
+            Fab(icon = PitStopIcons.Plus, onClick = {})
+            AppIconButton(icon = PitStopIcons.ChevronLeft, onClick = {})
+            AppIconButton(icon = PitStopIcons.Pencil, onClick = {})
+            AppIconButton(icon = PitStopIcons.Trash, onClick = {})
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(dimens.spaceS)) {
+            PresetChip("Масло", onClick = {})
+            PresetChip("ГРМ", onClick = {})
+        }
+
+        var themeSegment by remember { mutableIntStateOf(0) }
+        SegmentedControl(
+            options = listOf("Светлая", "Тёмная", "Системная"),
+            selectedIndex = themeSegment,
+            onSelect = { themeSegment = it },
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            TabBarItem(icon = PitStopIcons.Car, label = "Авто", selected = true, onClick = {})
+            TabBarItem(icon = PitStopIcons.Gear, label = "Настройки", selected = false, onClick = {})
         }
     }
 }

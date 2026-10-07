@@ -58,12 +58,12 @@ ViewModel-ы — `StateFlow<UiState>`, экран подписывается ч�
 - ✅ `ui/icons/PitStopIcons.kt` — тонкая обёртка: 17 семантических имён из макета (car, gauge, droplet, disc, filter, wrench, gear, clock, check, chevronLeft, pencil, trash, bell, plus, minus, sun, moonToggle) смаплены на `Lucide.*`, чтобы экраны не зависели от конкретной иконочной библиотеки напрямую.
 
 Кнопки:
-- ⬜ `PrimaryButton`
-- ⬜ `Fab`
-- ⬜ `IconButton`
-- ⬜ `PresetChip`
-- ⬜ `SegmentedControl`
-- ⬜ `TabBarItem`
+- ✅ `PrimaryButton`
+- ✅ `Fab`
+- ✅ `AppIconButton` (переименован из `IconButton` из плана — так называется компонент в `androidx.compose.material3`, конфликт имён)
+- ✅ `PresetChip`
+- ✅ `SegmentedControl`
+- ✅ `TabBarItem`
 
 Поля:
 - ⬜ `AppTextField`
