@@ -18,7 +18,12 @@
 ru.kuznetsov.pitstop/
 ├── ui/
 │   ├── theme/        # Color.kt, Type.kt, Theme.kt, Dimens.kt
-│   ├── components/   # PrimaryButton, Fab, IconButton, StatusChip, GaugeRing, Card-варианты...
+│   ├── components/   # ComponentPreview.kt (общий @Preview-хелпер) + подпакеты по группам из каталога макета:
+│   │   ├── buttons/      # PrimaryButton, Fab, AppIconButton, PresetChip, SegmentedControl, TabBarItem
+│   │   ├── fields/       # AppTextField, AppNumberField, LabeledMiniField, InlineEditField
+│   │   ├── steppers/     # Stepper
+│   │   ├── indicators/   # AppSwitch, StatusChip, ProgressBar, GaugeRing
+│   │   └── cards/        # ListRowCard, StatCard, NotificationPreviewCard
 │   └── icons/         # PitStopIcons.kt — иконки из макета как ImageVector
 ├── domain/
 │   ├── model/         # Car, MaintenanceTask, ServiceHistoryEntry, TaskStatus, TaskStat
