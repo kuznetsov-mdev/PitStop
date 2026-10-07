@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_tagline">Учёт регламентного ТО по пробегу и по времени</string>
-    <string name="showcase_mono_sample">84 300 КМ · 09:00</string>
-    <string name="showcase_section_buttons">Кнопки</string>
-    <string name="showcase_section_fields">Поля</string>
-    <string name="showcase_section_stepper">Степпер</string>
-    <string name="showcase_section_indicators">Индикаторы</string>
     <string name="action_save">Сохранить</string>
     <string name="action_save_car">Сохранить авто</string>
     <string name="action_decrease">Уменьшить</string>
@@ -31,5 +25,12 @@
     <string name="count_of_total">%1$d из %2$d</string>
     <string name="notification_time_now">сейчас</string>
     <string name="notification_sample_text">Пора заменить фильтр</string>
-    <string name="showcase_section_cards">Карточки</string>
+    <string name="screen_cars">Мои авто</string>
+    <string name="screen_add_car">Добавление авто</string>
+    <string name="screen_car_detail">Регламентные работы</string>
+    <string name="screen_history">История ТО</string>
+    <string name="screen_settings">Настройки</string>
+    <string name="action_back">Назад</string>
+    <string name="action_open_car">Открыть авто</string>
+    <string name="action_add_car">Добавить авто</string>
 </resources>

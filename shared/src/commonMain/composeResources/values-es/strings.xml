@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_tagline">Control del mantenimiento por kilometraje y por tiempo</string>
-    <string name="showcase_mono_sample">84.300 KM · 09:00</string>
-    <string name="showcase_section_buttons">Botones</string>
-    <string name="showcase_section_fields">Campos</string>
-    <string name="showcase_section_stepper">Selector numérico</string>
-    <string name="showcase_section_indicators">Indicadores</string>
     <string name="action_save">Guardar</string>
     <string name="action_save_car">Guardar coche</string>
     <string name="action_decrease">Disminuir</string>
@@ -31,5 +25,12 @@
     <string name="count_of_total">%1$d de %2$d</string>
     <string name="notification_time_now">ahora</string>
     <string name="notification_sample_text">Es hora de cambiar el filtro</string>
-    <string name="showcase_section_cards">Tarjetas</string>
+    <string name="screen_cars">Mis coches</string>
+    <string name="screen_add_car">Nuevo coche</string>
+    <string name="screen_car_detail">Mantenimiento</string>
+    <string name="screen_history">Historial de servicio</string>
+    <string name="screen_settings">Ajustes</string>
+    <string name="action_back">Atrás</string>
+    <string name="action_open_car">Abrir coche</string>
+    <string name="action_add_car">Añadir coche</string>
 </resources>

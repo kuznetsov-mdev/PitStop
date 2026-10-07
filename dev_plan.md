@@ -97,9 +97,9 @@ ViewModel-ы — `StateFlow<UiState>`, экран подписывается ч�
 - ⬜ `@Preview` каждого компонента в обеих темах (как в макете — light/dark exhibit).
 
 ### Этап 3 — Навигация
-- ⬜ Подключить `org.jetbrains.androidx.navigation:navigation-compose:2.10.0-beta01` (JetBrains-форк Navigation Compose для Compose Multiplatform; "чистый" `androidx.navigation` 2.10.2 — Android-only) — alias в `gradle/libs.versions.toml`, зависимость в `commonMain.dependencies` модуля `shared`.
-- ⬜ `features/navigation/Destinations.kt` — sealed-класс: `Cars`, `AddCar`, `CarDetail(carId)`, `History(carId)`, `Settings`.
-- ⬜ `features/navigation/NavGraph.kt` — `NavHost`, становится новым корневым composable вместо временной витрины темы из этапа 1.
+- ✅ Подключить `org.jetbrains.androidx.navigation:navigation-compose:2.10.0-beta01` (JetBrains-форк Navigation Compose для Compose Multiplatform; "чистый" `androidx.navigation` 2.10.2 — Android-only) — alias в `gradle/libs.versions.toml`, зависимость в `commonMain.dependencies` модуля `shared`.
+- ✅ `features/navigation/Destinations.kt` — sealed-класс: `Cars`, `AddCar`, `CarDetail(carId)`, `History(carId)`, `Settings`.
+- ✅ `features/navigation/NavGraph.kt` — `NavHost`, становится новым корневым composable вместо временной витрины темы из этапа 1. *Корень — `PitStopNavGraph` (`Scaffold` + таб-бар на `Cars`/`Settings`); маршруты пока ведут на временный `PlaceholderScreen` — заменится экранами на этапе 6.*
 
 *Почему именно сейчас: экраны на следующем этапе сразу пишутся с переходами между собой, retrofit-навигацию потом не делаем.*
 
