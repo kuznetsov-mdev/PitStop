@@ -85,10 +85,10 @@ ViewModel-ы — `StateFlow<UiState>`, экран подписывается ч�
 - ✅ `ProgressBar` (цвет заливки выводится из значения: до 60% — `tierOk`, до 90% — `tierSoon`, выше — `tierDue`)
 - ✅ `GaugeRing`
 
-Карточки:
-- ⬜ `ListRowCard`
-- ⬜ `StatCard`
-- ⬜ `NotificationPreviewCard`
+Карточки (`ui.components.cards`):
+- ✅ `ListRowCard`
+- ✅ `StatCard`
+- ✅ `NotificationPreviewCard`
 
 Локализация:
 - ✅ Строки вынесены в `composeResources/values*/strings.xml`: английский — по умолчанию (`values`), русский (`values-ru`) и испанский (`values-es`) — дополнительно. В коде — `stringResource(Res.string.*)`, язык берётся из системной локали. Для iOS языки объявлены в `Info.plist` (`CFBundleLocalizations`). Новые строки сразу добавляются во все три файла.

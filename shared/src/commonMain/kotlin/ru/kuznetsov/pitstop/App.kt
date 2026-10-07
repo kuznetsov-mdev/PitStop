@@ -33,16 +33,24 @@ import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import pitstop.shared.generated.resources.Res
 import pitstop.shared.generated.resources.action_save_car
+import pitstop.shared.generated.resources.app_name
 import pitstop.shared.generated.resources.app_tagline
+import pitstop.shared.generated.resources.count_of_total
 import pitstop.shared.generated.resources.field_interval_km
 import pitstop.shared.generated.resources.field_last_replacement_date
+import pitstop.shared.generated.resources.mileage_km
+import pitstop.shared.generated.resources.notification_sample_text
+import pitstop.shared.generated.resources.notification_time_now
 import pitstop.shared.generated.resources.preset_oil
 import pitstop.shared.generated.resources.preset_timing_belt
 import pitstop.shared.generated.resources.showcase_mono_sample
 import pitstop.shared.generated.resources.showcase_section_buttons
+import pitstop.shared.generated.resources.showcase_section_cards
 import pitstop.shared.generated.resources.showcase_section_fields
 import pitstop.shared.generated.resources.showcase_section_indicators
 import pitstop.shared.generated.resources.showcase_section_stepper
+import pitstop.shared.generated.resources.stat_mileage
+import pitstop.shared.generated.resources.stat_soon_overdue
 import pitstop.shared.generated.resources.tab_cars
 import pitstop.shared.generated.resources.tab_settings
 import pitstop.shared.generated.resources.theme_dark
@@ -55,6 +63,9 @@ import ru.kuznetsov.pitstop.ui.components.buttons.PresetChip
 import ru.kuznetsov.pitstop.ui.components.buttons.PrimaryButton
 import ru.kuznetsov.pitstop.ui.components.buttons.SegmentedControl
 import ru.kuznetsov.pitstop.ui.components.buttons.TabBarItem
+import ru.kuznetsov.pitstop.ui.components.cards.ListRowCard
+import ru.kuznetsov.pitstop.ui.components.cards.NotificationPreviewCard
+import ru.kuznetsov.pitstop.ui.components.cards.StatCard
 import ru.kuznetsov.pitstop.ui.components.fields.AppNumberField
 import ru.kuznetsov.pitstop.ui.components.fields.AppTextField
 import ru.kuznetsov.pitstop.ui.components.fields.InlineEditField
@@ -236,6 +247,39 @@ private fun ThemeShowcase() {
             GaugeRing(value = 0.25f, color = StatusTier.Soon.color, count = 1)
             GaugeRing(value = 0.06f, color = StatusTier.Ok.color, count = 0)
         }
+
+        Text(stringResource(Res.string.showcase_section_cards), style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
+
+        ListRowCard(
+            icon = PitStopIcons.Car,
+            title = "Kia Rio",
+            subtitle = stringResource(Res.string.mileage_km, "84 300"),
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {},
+            trailing = { GaugeRing(value = 0.25f, color = StatusTier.Soon.color, count = 1) },
+        )
+
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            StatCard(
+                label = stringResource(Res.string.stat_mileage),
+                value = "84 300",
+                icon = PitStopIcons.Gauge,
+                modifier = Modifier.weight(1f),
+            )
+            StatCard(
+                label = stringResource(Res.string.stat_soon_overdue),
+                value = stringResource(Res.string.count_of_total, 1, 4),
+                valueColor = StatusTier.Soon.color,
+                modifier = Modifier.weight(1f),
+            )
+        }
+
+        NotificationPreviewCard(
+            title = stringResource(Res.string.app_name),
+            time = stringResource(Res.string.notification_time_now),
+            text = stringResource(Res.string.notification_sample_text),
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
