@@ -18,12 +18,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -34,6 +36,11 @@ import ru.kuznetsov.pitstop.ui.components.buttons.PresetChip
 import ru.kuznetsov.pitstop.ui.components.buttons.PrimaryButton
 import ru.kuznetsov.pitstop.ui.components.buttons.SegmentedControl
 import ru.kuznetsov.pitstop.ui.components.buttons.TabBarItem
+import ru.kuznetsov.pitstop.ui.components.fields.AppNumberField
+import ru.kuznetsov.pitstop.ui.components.fields.AppTextField
+import ru.kuznetsov.pitstop.ui.components.fields.InlineEditField
+import ru.kuznetsov.pitstop.ui.components.fields.LabeledMiniField
+import ru.kuznetsov.pitstop.ui.components.steppers.Stepper
 import ru.kuznetsov.pitstop.ui.icons.PitStopIcons
 import ru.kuznetsov.pitstop.ui.theme.PitStopColorScheme
 import ru.kuznetsov.pitstop.ui.theme.PitStopTheme
@@ -146,6 +153,38 @@ private fun ThemeShowcase() {
             TabBarItem(icon = PitStopIcons.Car, label = "Авто", selected = true, onClick = {})
             TabBarItem(icon = PitStopIcons.Gear, label = "Настройки", selected = false, onClick = {})
         }
+
+        Text("Поля", style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
+
+        var brand by remember { mutableStateOf("Kia Rio") }
+        AppTextField(value = brand, onValueChange = { brand = it }, modifier = Modifier.fillMaxWidth())
+
+        var mileage by remember { mutableStateOf("84300") }
+        AppNumberField(value = mileage, onValueChange = { mileage = it }, unit = "км", modifier = Modifier.fillMaxWidth())
+
+        Row(horizontalArrangement = Arrangement.spacedBy(dimens.spaceS)) {
+            var interval by remember { mutableStateOf("10000") }
+            LabeledMiniField(
+                label = "Интервал, км",
+                value = interval,
+                onValueChange = { interval = it },
+                keyboardType = KeyboardType.Number,
+                modifier = Modifier.weight(1f),
+            )
+            var lastDate by remember { mutableStateOf("15.01.2026") }
+            LabeledMiniField(
+                label = "Дата последней замены",
+                value = lastDate,
+                onValueChange = { lastDate = it },
+                modifier = Modifier.weight(1f),
+            )
+        }
+
+        InlineEditField(initialValue = "84300", onSave = {}, modifier = Modifier.fillMaxWidth(0.6f))
+
+        Text("Степпер", style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
+        var reminderWindow by remember { mutableIntStateOf(2) }
+        Stepper(value = reminderWindow, onValueChange = { reminderWindow = it }, min = 1, max = 9)
     }
 }
 

@@ -62,7 +62,7 @@ ViewModel-ы — `StateFlow<UiState>`, экран подписывается ч�
 - ✅ Подключить `com.composables:icons-lucide:1.1.0`, проверено на Android (`:androidApp:assembleDebug`) и iOS (`:shared:compileKotlinIosSimulatorArm64`).
 - ✅ `ui/icons/PitStopIcons.kt` — тонкая обёртка: 17 семантических имён из макета (car, gauge, droplet, disc, filter, wrench, gear, clock, check, chevronLeft, pencil, trash, bell, plus, minus, sun, moonToggle) смаплены на `Lucide.*`, чтобы экраны не зависели от конкретной иконочной библиотеки напрямую.
 
-Кнопки:
+Кнопки (`ui.components.buttons`):
 - ✅ `PrimaryButton`
 - ✅ `Fab`
 - ✅ `AppIconButton` (переименован из `IconButton` из плана — так называется компонент в `androidx.compose.material3`, конфликт имён)
@@ -70,14 +70,14 @@ ViewModel-ы — `StateFlow<UiState>`, экран подписывается ч�
 - ✅ `SegmentedControl`
 - ✅ `TabBarItem`
 
-Поля:
-- ⬜ `AppTextField`
-- ⬜ `AppNumberField`
-- ⬜ `LabeledMiniField`
-- ⬜ `InlineEditField`
+Поля (`ui.components.fields`):
+- ✅ `AppTextField`
+- ✅ `AppNumberField`
+- ✅ `LabeledMiniField`
+- ✅ `InlineEditField`
 
-Степпер:
-- ⬜ `Stepper`
+Степпер (`ui.components.steppers`):
+- ✅ `Stepper`
 
 Индикаторы:
 - ⬜ `AppSwitch`
