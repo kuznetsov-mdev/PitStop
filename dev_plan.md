@@ -79,11 +79,11 @@ ViewModel-ы — `StateFlow<UiState>`, экран подписывается ч�
 Степпер (`ui.components.steppers`):
 - ✅ `Stepper`
 
-Индикаторы:
-- ⬜ `AppSwitch`
-- ⬜ `StatusChip`
-- ⬜ `ProgressBar`
-- ⬜ `GaugeRing`
+Индикаторы (`ui.components.indicators`):
+- ✅ `AppSwitch`
+- ✅ `StatusChip` (+ `StatusTier` — ui-kit enum статуса с цветом и подписью; доменный `TaskStatus` из этапа 5 маппится в него на экранах)
+- ✅ `ProgressBar` (цвет заливки выводится из значения: до 60% — `tierOk`, до 90% — `tierSoon`, выше — `tierDue`)
+- ✅ `GaugeRing`
 
 Карточки:
 - ⬜ `ListRowCard`

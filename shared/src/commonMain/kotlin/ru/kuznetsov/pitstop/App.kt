@@ -40,6 +40,12 @@ import ru.kuznetsov.pitstop.ui.components.fields.AppNumberField
 import ru.kuznetsov.pitstop.ui.components.fields.AppTextField
 import ru.kuznetsov.pitstop.ui.components.fields.InlineEditField
 import ru.kuznetsov.pitstop.ui.components.fields.LabeledMiniField
+import ru.kuznetsov.pitstop.ui.components.indicators.AppSwitch
+import ru.kuznetsov.pitstop.ui.components.indicators.GaugeRing
+import ru.kuznetsov.pitstop.ui.components.indicators.ProgressBar
+import ru.kuznetsov.pitstop.ui.components.indicators.StatusChip
+import ru.kuznetsov.pitstop.ui.components.indicators.StatusTier
+import ru.kuznetsov.pitstop.ui.components.indicators.color
 import ru.kuznetsov.pitstop.ui.components.steppers.Stepper
 import ru.kuznetsov.pitstop.ui.icons.PitStopIcons
 import ru.kuznetsov.pitstop.ui.theme.PitStopColorScheme
@@ -185,6 +191,28 @@ private fun ThemeShowcase() {
         Text("Степпер", style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
         var reminderWindow by remember { mutableIntStateOf(2) }
         Stepper(value = reminderWindow, onValueChange = { reminderWindow = it }, min = 1, max = 9)
+
+        Text("Индикаторы", style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
+
+        Row(horizontalArrangement = Arrangement.spacedBy(dimens.spaceS)) {
+            var pushOn by remember { mutableStateOf(true) }
+            AppSwitch(checked = pushOn, onCheckedChange = { pushOn = it })
+            var soundOn by remember { mutableStateOf(false) }
+            AppSwitch(checked = soundOn, onCheckedChange = { soundOn = it })
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(dimens.spaceS)) {
+            StatusTier.entries.forEach { StatusChip(it) }
+        }
+
+        ProgressBar(value = 0.4f)
+        ProgressBar(value = 0.75f)
+        ProgressBar(value = 1f)
+
+        Row(horizontalArrangement = Arrangement.spacedBy(dimens.spaceS)) {
+            GaugeRing(value = 0.25f, color = StatusTier.Soon.color, count = 1)
+            GaugeRing(value = 0.06f, color = StatusTier.Ok.color, count = 0)
+        }
     }
 }
 
