@@ -1,7 +1,5 @@
 package ru.kuznetsov.pitstop.ui.components.buttons
 
-import ru.kuznetsov.pitstop.ui.components.ComponentPreview
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -19,9 +17,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import pitstop.shared.generated.resources.Res
+import pitstop.shared.generated.resources.preset_oil
+import ru.kuznetsov.pitstop.ui.components.ComponentPreview
 import ru.kuznetsov.pitstop.ui.theme.PitStopTheme
 
-/** Dashed pill used to quick-add a preset maintenance task (e.g. "+ Масло") when adding a car. */
+/** Dashed pill used to quick-add a preset maintenance task (e.g. "+ Oil") when adding a car. */
 @Composable
 fun PresetChip(
     label: String,
@@ -59,11 +61,11 @@ fun PresetChip(
 @Preview
 @Composable
 private fun PresetChipLightPreview() = ComponentPreview(darkTheme = false) {
-    PresetChip("Масло", onClick = {})
+    PresetChip(stringResource(Res.string.preset_oil), onClick = {})
 }
 
 @Preview
 @Composable
 private fun PresetChipDarkPreview() = ComponentPreview(darkTheme = true) {
-    PresetChip("Масло", onClick = {})
+    PresetChip(stringResource(Res.string.preset_oil), onClick = {})
 }

@@ -12,6 +12,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import pitstop.shared.generated.resources.Res
+import pitstop.shared.generated.resources.field_interval_km
 import ru.kuznetsov.pitstop.ui.components.ComponentPreview
 import ru.kuznetsov.pitstop.ui.theme.PitStopTheme
 
@@ -51,7 +54,7 @@ fun LabeledMiniField(
 private fun LabeledMiniFieldLightPreview() = ComponentPreview(darkTheme = false) {
     Row {
         LabeledMiniField(
-            label = "Интервал, км",
+            label = stringResource(Res.string.field_interval_km),
             value = "10000",
             onValueChange = {},
             keyboardType = KeyboardType.Number,
@@ -64,7 +67,7 @@ private fun LabeledMiniFieldLightPreview() = ComponentPreview(darkTheme = false)
 private fun LabeledMiniFieldDarkPreview() = ComponentPreview(darkTheme = true) {
     Row {
         LabeledMiniField(
-            label = "Интервал, км",
+            label = stringResource(Res.string.field_interval_km),
             value = "10000",
             onValueChange = {},
             keyboardType = KeyboardType.Number,

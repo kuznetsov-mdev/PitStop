@@ -22,6 +22,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import pitstop.shared.generated.resources.Res
+import pitstop.shared.generated.resources.action_decrease
+import pitstop.shared.generated.resources.action_increase
 import ru.kuznetsov.pitstop.ui.components.ComponentPreview
 import ru.kuznetsov.pitstop.ui.icons.PitStopIcons
 import ru.kuznetsov.pitstop.ui.theme.PitStopTheme
@@ -44,7 +48,7 @@ fun Stepper(
     ) {
         StepButton(
             icon = PitStopIcons.Minus,
-            contentDescription = "Уменьшить",
+            contentDescription = stringResource(Res.string.action_decrease),
             enabled = value - step >= min,
             onClick = { onValueChange((value - step).coerceAtLeast(min)) },
         )
@@ -57,7 +61,7 @@ fun Stepper(
         )
         StepButton(
             icon = PitStopIcons.Plus,
-            contentDescription = "Увеличить",
+            contentDescription = stringResource(Res.string.action_increase),
             enabled = value + step <= max,
             onClick = { onValueChange((value + step).coerceAtMost(max)) },
         )

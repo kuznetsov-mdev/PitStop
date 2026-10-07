@@ -21,6 +21,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import pitstop.shared.generated.resources.Res
+import pitstop.shared.generated.resources.action_save
 import ru.kuznetsov.pitstop.ui.components.ComponentPreview
 import ru.kuznetsov.pitstop.ui.icons.PitStopIcons
 import ru.kuznetsov.pitstop.ui.theme.PitStopTheme
@@ -56,7 +59,7 @@ fun InlineEditField(
                 .clickable { onSave(text) },
             contentAlignment = Alignment.Center,
         ) {
-            Icon(PitStopIcons.Check, contentDescription = "Сохранить", tint = colors.onAccent, modifier = Modifier.size(14.dp))
+            Icon(PitStopIcons.Check, contentDescription = stringResource(Res.string.action_save), tint = colors.onAccent, modifier = Modifier.size(14.dp))
         }
     }
 }

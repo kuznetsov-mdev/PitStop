@@ -30,6 +30,25 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import pitstop.shared.generated.resources.Res
+import pitstop.shared.generated.resources.action_save_car
+import pitstop.shared.generated.resources.app_tagline
+import pitstop.shared.generated.resources.field_interval_km
+import pitstop.shared.generated.resources.field_last_replacement_date
+import pitstop.shared.generated.resources.preset_oil
+import pitstop.shared.generated.resources.preset_timing_belt
+import pitstop.shared.generated.resources.showcase_mono_sample
+import pitstop.shared.generated.resources.showcase_section_buttons
+import pitstop.shared.generated.resources.showcase_section_fields
+import pitstop.shared.generated.resources.showcase_section_indicators
+import pitstop.shared.generated.resources.showcase_section_stepper
+import pitstop.shared.generated.resources.tab_cars
+import pitstop.shared.generated.resources.tab_settings
+import pitstop.shared.generated.resources.theme_dark
+import pitstop.shared.generated.resources.theme_light
+import pitstop.shared.generated.resources.theme_system
+import pitstop.shared.generated.resources.unit_km
 import ru.kuznetsov.pitstop.ui.components.buttons.AppIconButton
 import ru.kuznetsov.pitstop.ui.components.buttons.Fab
 import ru.kuznetsov.pitstop.ui.components.buttons.PresetChip
@@ -81,11 +100,11 @@ private fun ThemeShowcase() {
     ) {
         Text("PitStop", style = typography.display, color = colors.ink)
         Text(
-            "Учёт регламентного ТО по пробегу и по времени",
+            stringResource(Res.string.app_tagline),
             style = typography.sans,
             color = colors.inkMuted,
         )
-        Text("84 300 КМ · 09:00", style = typography.mono, color = colors.ink)
+        Text(stringResource(Res.string.showcase_mono_sample), style = typography.mono, color = colors.ink)
 
         Row(horizontalArrangement = Arrangement.spacedBy(dimens.spaceS)) {
             ColorSwatch("bg", colors.bg, colors)
@@ -131,9 +150,9 @@ private fun ThemeShowcase() {
             }
         }
 
-        Text("Кнопки", style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
+        Text(stringResource(Res.string.showcase_section_buttons), style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
 
-        PrimaryButton("Сохранить авто", onClick = {}, modifier = Modifier.fillMaxWidth())
+        PrimaryButton(stringResource(Res.string.action_save_car), onClick = {}, modifier = Modifier.fillMaxWidth())
 
         Row(horizontalArrangement = Arrangement.spacedBy(dimens.spaceM), verticalAlignment = Alignment.CenterVertically) {
             Fab(icon = PitStopIcons.Plus, onClick = {})
@@ -143,35 +162,39 @@ private fun ThemeShowcase() {
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(dimens.spaceS)) {
-            PresetChip("Масло", onClick = {})
-            PresetChip("ГРМ", onClick = {})
+            PresetChip(stringResource(Res.string.preset_oil), onClick = {})
+            PresetChip(stringResource(Res.string.preset_timing_belt), onClick = {})
         }
 
         var themeSegment by remember { mutableIntStateOf(0) }
         SegmentedControl(
-            options = listOf("Светлая", "Тёмная", "Системная"),
+            options = listOf(
+                stringResource(Res.string.theme_light),
+                stringResource(Res.string.theme_dark),
+                stringResource(Res.string.theme_system),
+            ),
             selectedIndex = themeSegment,
             onSelect = { themeSegment = it },
             modifier = Modifier.fillMaxWidth(),
         )
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            TabBarItem(icon = PitStopIcons.Car, label = "Авто", selected = true, onClick = {})
-            TabBarItem(icon = PitStopIcons.Gear, label = "Настройки", selected = false, onClick = {})
+            TabBarItem(icon = PitStopIcons.Car, label = stringResource(Res.string.tab_cars), selected = true, onClick = {})
+            TabBarItem(icon = PitStopIcons.Gear, label = stringResource(Res.string.tab_settings), selected = false, onClick = {})
         }
 
-        Text("Поля", style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
+        Text(stringResource(Res.string.showcase_section_fields), style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
 
         var brand by remember { mutableStateOf("Kia Rio") }
         AppTextField(value = brand, onValueChange = { brand = it }, modifier = Modifier.fillMaxWidth())
 
         var mileage by remember { mutableStateOf("84300") }
-        AppNumberField(value = mileage, onValueChange = { mileage = it }, unit = "км", modifier = Modifier.fillMaxWidth())
+        AppNumberField(value = mileage, onValueChange = { mileage = it }, unit = stringResource(Res.string.unit_km), modifier = Modifier.fillMaxWidth())
 
         Row(horizontalArrangement = Arrangement.spacedBy(dimens.spaceS)) {
             var interval by remember { mutableStateOf("10000") }
             LabeledMiniField(
-                label = "Интервал, км",
+                label = stringResource(Res.string.field_interval_km),
                 value = interval,
                 onValueChange = { interval = it },
                 keyboardType = KeyboardType.Number,
@@ -179,7 +202,7 @@ private fun ThemeShowcase() {
             )
             var lastDate by remember { mutableStateOf("15.01.2026") }
             LabeledMiniField(
-                label = "Дата последней замены",
+                label = stringResource(Res.string.field_last_replacement_date),
                 value = lastDate,
                 onValueChange = { lastDate = it },
                 modifier = Modifier.weight(1f),
@@ -188,11 +211,11 @@ private fun ThemeShowcase() {
 
         InlineEditField(initialValue = "84300", onSave = {}, modifier = Modifier.fillMaxWidth(0.6f))
 
-        Text("Степпер", style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
+        Text(stringResource(Res.string.showcase_section_stepper), style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
         var reminderWindow by remember { mutableIntStateOf(2) }
         Stepper(value = reminderWindow, onValueChange = { reminderWindow = it }, min = 1, max = 9)
 
-        Text("Индикаторы", style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
+        Text(stringResource(Res.string.showcase_section_indicators), style = typography.display.copy(fontSize = 16.sp), color = colors.ink)
 
         Row(horizontalArrangement = Arrangement.spacedBy(dimens.spaceS)) {
             var pushOn by remember { mutableStateOf(true) }

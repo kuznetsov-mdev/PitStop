@@ -1,7 +1,5 @@
 package ru.kuznetsov.pitstop.ui.components.buttons
 
-import ru.kuznetsov.pitstop.ui.components.ComponentPreview
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -18,9 +16,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import pitstop.shared.generated.resources.Res
+import pitstop.shared.generated.resources.action_save_car
+import ru.kuznetsov.pitstop.ui.components.ComponentPreview
 import ru.kuznetsov.pitstop.ui.theme.PitStopTheme
 
-/** Full-width-capable primary action button — accent background, used for form submits (e.g. "Сохранить авто"). */
+/** Full-width-capable primary action button — accent background, used for form submits (e.g. "Save car"). */
 @Composable
 fun PrimaryButton(
     text: String,
@@ -50,11 +52,11 @@ fun PrimaryButton(
 @Preview
 @Composable
 private fun PrimaryButtonLightPreview() = ComponentPreview(darkTheme = false) {
-    PrimaryButton("Сохранить авто", onClick = {})
+    PrimaryButton(stringResource(Res.string.action_save_car), onClick = {})
 }
 
 @Preview
 @Composable
 private fun PrimaryButtonDarkPreview() = ComponentPreview(darkTheme = true) {
-    PrimaryButton("Сохранить авто", onClick = {})
+    PrimaryButton(stringResource(Res.string.action_save_car), onClick = {})
 }

@@ -10,10 +10,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import pitstop.shared.generated.resources.Res
+import pitstop.shared.generated.resources.unit_km
 import ru.kuznetsov.pitstop.ui.components.ComponentPreview
 import ru.kuznetsov.pitstop.ui.theme.PitStopTheme
 
-/** Numeric input (mono digits) — mileage, intervals, reminder window. Optional trailing [unit] label (e.g. "км"). */
+/** Numeric input (mono digits) — mileage, intervals, reminder window. Optional trailing [unit] label (e.g. "km"). */
 @Composable
 fun AppNumberField(
     value: String,
@@ -50,11 +53,11 @@ fun AppNumberField(
 @Preview
 @Composable
 private fun AppNumberFieldLightPreview() = ComponentPreview(darkTheme = false) {
-    AppNumberField(value = "84300", onValueChange = {}, unit = "км")
+    AppNumberField(value = "84300", onValueChange = {}, unit = stringResource(Res.string.unit_km))
 }
 
 @Preview
 @Composable
 private fun AppNumberFieldDarkPreview() = ComponentPreview(darkTheme = true) {
-    AppNumberField(value = "84300", onValueChange = {}, unit = "км")
+    AppNumberField(value = "84300", onValueChange = {}, unit = stringResource(Res.string.unit_km))
 }

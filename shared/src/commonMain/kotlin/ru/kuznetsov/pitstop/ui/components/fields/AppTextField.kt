@@ -7,6 +7,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import pitstop.shared.generated.resources.Res
+import pitstop.shared.generated.resources.car_name_placeholder
 import ru.kuznetsov.pitstop.ui.components.ComponentPreview
 import ru.kuznetsov.pitstop.ui.theme.PitStopTheme
 
@@ -40,5 +43,5 @@ private fun AppTextFieldLightPreview() = ComponentPreview(darkTheme = false) {
 @Preview
 @Composable
 private fun AppTextFieldDarkPreview() = ComponentPreview(darkTheme = true) {
-    AppTextField(value = "", onValueChange = {}, placeholder = "Например, Kia Rio")
+    AppTextField(value = "", onValueChange = {}, placeholder = stringResource(Res.string.car_name_placeholder))
 }

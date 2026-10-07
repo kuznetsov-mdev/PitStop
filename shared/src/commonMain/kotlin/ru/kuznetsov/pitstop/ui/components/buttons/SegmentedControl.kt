@@ -1,7 +1,5 @@
 package ru.kuznetsov.pitstop.ui.components.buttons
 
-import ru.kuznetsov.pitstop.ui.components.ComponentPreview
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +18,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import pitstop.shared.generated.resources.Res
+import pitstop.shared.generated.resources.theme_dark
+import pitstop.shared.generated.resources.theme_light
+import pitstop.shared.generated.resources.theme_system
+import ru.kuznetsov.pitstop.ui.components.ComponentPreview
 import ru.kuznetsov.pitstop.ui.theme.PitStopTheme
 
 /** Group of mutually-exclusive options — theme picker, unit picker (km/mi). */
@@ -81,11 +85,27 @@ private fun RowScope.Segment(label: String, selected: Boolean, onClick: () -> Un
 @Preview
 @Composable
 private fun SegmentedControlLightPreview() = ComponentPreview(darkTheme = false) {
-    SegmentedControl(listOf("Светлая", "Тёмная", "Системная"), selectedIndex = 0, onSelect = {})
+    SegmentedControl(
+        options = listOf(
+            stringResource(Res.string.theme_light),
+            stringResource(Res.string.theme_dark),
+            stringResource(Res.string.theme_system),
+        ),
+        selectedIndex = 0,
+        onSelect = {},
+    )
 }
 
 @Preview
 @Composable
 private fun SegmentedControlDarkPreview() = ComponentPreview(darkTheme = true) {
-    SegmentedControl(listOf("Светлая", "Тёмная", "Системная"), selectedIndex = 0, onSelect = {})
+    SegmentedControl(
+        options = listOf(
+            stringResource(Res.string.theme_light),
+            stringResource(Res.string.theme_dark),
+            stringResource(Res.string.theme_system),
+        ),
+        selectedIndex = 0,
+        onSelect = {},
+    )
 }

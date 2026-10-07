@@ -1,7 +1,5 @@
 package ru.kuznetsov.pitstop.ui.components.buttons
 
-import ru.kuznetsov.pitstop.ui.components.ComponentPreview
-
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,6 +13,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import pitstop.shared.generated.resources.Res
+import pitstop.shared.generated.resources.tab_cars
+import ru.kuznetsov.pitstop.ui.components.ComponentPreview
 import ru.kuznetsov.pitstop.ui.icons.PitStopIcons
 import ru.kuznetsov.pitstop.ui.theme.PitStopTheme
 
@@ -44,11 +46,11 @@ fun TabBarItem(
 @Preview
 @Composable
 private fun TabBarItemLightPreview() = ComponentPreview(darkTheme = false) {
-    TabBarItem(icon = PitStopIcons.Car, label = "Авто", selected = true, onClick = {})
+    TabBarItem(icon = PitStopIcons.Car, label = stringResource(Res.string.tab_cars), selected = true, onClick = {})
 }
 
 @Preview
 @Composable
 private fun TabBarItemDarkPreview() = ComponentPreview(darkTheme = true) {
-    TabBarItem(icon = PitStopIcons.Car, label = "Авто", selected = true, onClick = {})
+    TabBarItem(icon = PitStopIcons.Car, label = stringResource(Res.string.tab_cars), selected = true, onClick = {})
 }

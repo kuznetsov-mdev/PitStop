@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_tagline">Учёт регламентного ТО по пробегу и по времени</string>
+    <string name="showcase_mono_sample">84 300 КМ · 09:00</string>
+    <string name="showcase_section_buttons">Кнопки</string>
+    <string name="showcase_section_fields">Поля</string>
+    <string name="showcase_section_stepper">Степпер</string>
+    <string name="showcase_section_indicators">Индикаторы</string>
+    <string name="action_save">Сохранить</string>
+    <string name="action_save_car">Сохранить авто</string>
+    <string name="action_decrease">Уменьшить</string>
+    <string name="action_increase">Увеличить</string>
+    <string name="preset_oil">Масло</string>
+    <string name="preset_timing_belt">ГРМ</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="theme_system">Системная</string>
+    <string name="tab_cars">Авто</string>
+    <string name="tab_settings">Настройки</string>
+    <string name="unit_km">км</string>
+    <string name="field_interval_km">Интервал, км</string>
+    <string name="field_last_replacement_date">Дата последней замены</string>
+    <string name="car_name_placeholder">Например, Kia Rio</string>
+    <string name="status_ok">В порядке</string>
+    <string name="status_soon">Скоро</string>
+    <string name="status_due">Просрочено</string>
+</resources>
