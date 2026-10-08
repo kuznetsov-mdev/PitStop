@@ -35,4 +35,4 @@ PitStop is a Kotlin Multiplatform app (Android + iOS, shared UI via Compose Mult
 Kotlin Multiplatform · Compose Multiplatform (shared UI) · SQLDelight (local DB) · Koin (DI) — targeting Android and iOS from a single codebase.
 
 ## Status
-In active development. See the design mockup and development plan for the full roadmap.
+In active development. See the [design mockup](https://kuznetsov-mdev.github.io/PitStop/) and development plan for the full roadmap.

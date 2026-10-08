@@ -4,7 +4,7 @@
 
 Проект `PitStop` (Android + iOS, Kotlin Multiplatform) сейчас — это чистый wizard-скаффолд: `shared/src/commonMain` содержит только дефолтные `App.kt`/`Greeting.kt`/`Platform.kt`, `androidApp` и `iosApp` уже корректно хостят общий Compose-экран (`MainActivity` → `setContent { App() }`, `ContentView.swift` → `MainViewController()`), но никакой прикладной логики, экранов, темы или данных ещё нет.
 
-Цель — пошагово построить приложение по дизайн-макету (`PitStop_design.html`): сначала design-tokens и переиспользуемые компоненты, затем экраны на фейковых данных, затем domain/data слой и связка через domain, затем уведомления и полировка. Подключение каждой новой библиотеки привязано к конкретному шагу, на котором она впервые понадобится — ничего не тянем заранее "про запас".
+Цель — пошагово построить приложение по дизайн-макету (`docs/index.html`): сначала design-tokens и переиспользуемые компоненты, затем экраны на фейковых данных, затем domain/data слой и связка через domain, затем уведомления и полировка. Подключение каждой новой библиотеки привязано к конкретному шагу, на котором она впервые понадобится — ничего не тянем заранее "про запас".
 
 **Важное отличие от исходного предположения в задаче:** Compose Multiplatform **уже подключён и настроен** в `shared/build.gradle.kts` — плагины `composeMultiplatform`/`composeCompiler` применены, а `compose.{runtime,foundation,material3,ui,components.resources}` и `androidx.lifecycle.{viewmodelCompose,runtimeCompose}` уже объявлены в зависимостях `commonMain`. Отдельный шаг "подключить Compose Multiplatform" не нужен — этап 1 сразу переходит к написанию тем/токенов.
 

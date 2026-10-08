@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Одометр — дизайн-макет учёта регламентных работ</title>
+<style>
+  /* ============================================================
+     Одометр. Color IS the data: близость регламентной работы
+     показана цветом — тил (далеко) → янтарь (скоро) → красный
+     (просрочено) — по пробегу И по времени, что наступит раньше.
+     Эти три цвета-статуса НЕИЗМЕННЫ в обеих темах — меняются
+     только нейтральные тона (bg/surface/ink). Акцентный
+     электро-циан — цвет бренда для кнопок и FAB, тоже константа.
+     Сначала — живой кликабельный макет, ниже — два locked-exhibit
+     блока со статичными экранами в обеих темах разом.
+     ============================================================ */
+  :root {
+    --bg: #eef1f5;
+    --surface: #ffffff;
+    --surface-2: #e3e8ee;
+    --surface-3: #ccd5de;
+    --ink: #10151d;
+    --ink-muted: #5c6774;
+    --ink-faint: #97a2ae;
+    --rule: #dbe1e8;
+    --shadow: 0 1px 2px rgba(16,21,29,0.05), 0 20px 40px -20px rgba(16,21,29,0.16);
+
+    --accent: #0ea5b7;        /* электро-циан: бренд, кнопки, FAB — константа */
+    --on-accent: #ffffff;
+
+    --tier-ok: #1fab8c;       /* запас хода большой */
+    --tier-soon: #e2922e;     /* пора готовиться */
+    --tier-due: #e34b3f;      /* просрочено */
+    --on-tier: #ffffff;       /* текст поверх заливки тира — константа в обеих темах */
+
+    --display: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --sans: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a0e15; --surface: #121823; --surface-2: #1a222f; --surface-3: #242e3d;
+      --ink: #e9edf3; --ink-muted: #8d99a8; --ink-faint: #566072; --rule: #1e2733;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 30px 60px -24px rgba(0,0,0,0.7);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a0e15; --surface: #121823; --surface-2: #1a222f; --surface-3: #242e3d;
+    --ink: #e9edf3; --ink-muted: #8d99a8; --ink-faint: #566072; --rule: #1e2733;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 30px 60px -24px rgba(0,0,0,0.7);
+  }
+
+  .locked-light {
+    --bg: #eef1f5; --surface: #ffffff; --surface-2: #e3e8ee; --surface-3: #ccd5de;
+    --ink: #10151d; --ink-muted: #5c6774; --ink-faint: #97a2ae; --rule: #dbe1e8;
+    --shadow: 0 1px 2px rgba(16,21,29,0.05), 0 20px 40px -20px rgba(16,21,29,0.16);
+    color: var(--ink);
+  }
+  .locked-dark {
+    --bg: #0a0e15; --surface: #121823; --surface-2: #1a222f; --surface-3: #242e3d;
+    --ink: #e9edf3; --ink-muted: #8d99a8; --ink-faint: #566072; --rule: #1e2733;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 30px 60px -24px rgba(0,0,0,0.7);
+    color: var(--ink);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 1180px; margin: 0 auto; padding: 56px 24px 100px; }
+
+  .top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 14px;
+  }
+  h1 {
+    font-family: var(--display); font-weight: 800; font-size: clamp(28px, 4.2vw, 40px);
+    letter-spacing: -0.02em; line-height: 1.08; margin: 0 0 14px; text-wrap: balance; max-width: 22ch;
+  }
+  h1 em {
+    font-style: normal; background: linear-gradient(90deg, var(--accent), var(--tier-ok));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .subtitle { font-size: 16px; line-height: 1.6; color: var(--ink-muted); max-width: 64ch; margin: 0 0 28px; }
+
+  .theme-btn {
+    width: 40px; height: 40px; border-radius: 50%; background: var(--surface); border: 1px solid var(--rule);
+    display: flex; align-items: center; justify-content: center; color: var(--ink-muted); cursor: pointer; flex-shrink: 0;
+  }
+  .theme-btn:hover { color: var(--ink); }
+  .theme-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Legend ---------- */
+  .legend {
+    display: flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 12px;
+    overflow: hidden; max-width: 680px; margin-bottom: 8px; background: var(--surface);
+  }
+  .legend-item { flex: 1 1 180px; padding: 15px 16px; border-right: 1px solid var(--rule); }
+  .legend-item:last-child { border-right: none; }
+  .legend-swatch { width: 20px; height: 20px; border-radius: 50%; margin-bottom: 9px; }
+  .legend-item .range { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); }
+  .legend-item .label { font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .legend-caption { font-size: 12.5px; color: var(--ink-faint); margin: 12px 0 0; max-width: 64ch; }
+  .legend-caption code { font-family: var(--mono); background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+  /* ---------- Section chrome ---------- */
+  .section-block { margin-top: 56px; padding: 36px 32px 44px; border-radius: 24px; background: var(--bg); }
+  .section-block.panel { border: 1px solid var(--rule); }
+  .section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .theme-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .theme-dot.light { background: #e2922e; box-shadow: 0 0 0 3px rgba(226,146,46,0.18); }
+  .theme-dot.dark { background: #1fab8c; box-shadow: 0 0 0 3px rgba(31,171,140,0.18); }
+  .section-block h2 { font-family: var(--display); font-weight: 800; font-size: 21px; margin: 0; color: var(--ink); }
+  .section-sub { font-size: 13.5px; color: var(--ink-faint); margin: 0 0 28px; max-width: 64ch; }
+
+  /* ---------- Gallery ---------- */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 36px 24px; align-items: start; }
+  figure { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  figcaption { display: flex; align-items: baseline; gap: 9px; }
+  .screen-index { font-family: var(--mono); font-size: 11.5px; color: var(--accent); font-weight: 700; flex-shrink: 0; }
+  .screen-name { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+
+  /* ---------- Phone chrome ---------- */
+  .phone {
+    width: 100%; max-width: 336px; aspect-ratio: 336 / 699; border-radius: 42px; background: #050608;
+    padding: 11px; box-shadow: var(--shadow); position: relative;
+  }
+  .phone.lg { max-width: 372px; aspect-ratio: 372 / 760; }
+  .notch { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 98px; height: 21px; background: #000; border-radius: 11px; z-index: 5; }
+  .screen { width: 100%; height: 100%; background: var(--bg); border-radius: 32px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+  .phone.lg .notch { width: 100px; }
+  .phone.lg .screen { border-radius: 34px; }
+
+  .view { display: flex; flex-direction: column; height: 100%; }
+  .interactive .view { position: absolute; inset: 0; display: none; }
+  .interactive .view.active { display: flex; }
+
+  .s-topbar { display: flex; align-items: center; justify-content: space-between; padding: 38px 18px 0; flex-shrink: 0; }
+  .icon-btn {
+    width: 31px; height: 31px; border-radius: 50%; background: var(--surface-2); border: none;
+    display: flex; align-items: center; justify-content: center; color: var(--ink-muted); flex-shrink: 0; cursor: pointer;
+  }
+  .icon-btn:hover { color: var(--ink); }
+  .icon-row { display: flex; gap: 6px; }
+  svg.i { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---------- Cars list ---------- */
+  .s-title { font-family: var(--display); font-weight: 800; font-size: 20px; padding: 11px 18px 4px; flex-shrink: 0; }
+  .s-sub { font-size: 11.5px; color: var(--ink-faint); padding: 0 18px 10px; flex-shrink: 0; }
+  .car-list { flex: 1; overflow-y: auto; padding: 4px 14px 12px; }
+  .car-card {
+    display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 14px; padding: 13px; margin-bottom: 10px;
+  }
+  .interactive .car-card { cursor: pointer; }
+  .car-icon { width: 40px; height: 40px; border-radius: 11px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; color: var(--ink-muted); flex-shrink: 0; }
+  .car-main { flex: 1; min-width: 0; }
+  .car-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .car-mileage { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+  .gauge { width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .gauge-inner {
+    width: 38px; height: 38px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center;
+    font-family: var(--display); font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums;
+  }
+
+  .fab {
+    position: absolute; right: 18px; bottom: 22px; width: 48px; height: 48px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 10px 20px -8px rgba(14,165,183,0.55); border: none;
+    display: flex; align-items: center; justify-content: center; color: var(--on-accent); cursor: pointer; z-index: 20;
+  }
+  .interactive .fab { bottom: 82px; }
+  .fab svg.i { width: 21px; height: 21px; stroke-width: 2.2; }
+
+  .tabbar { display: flex; border-top: 1px solid var(--rule); background: var(--surface); flex-shrink: 0; }
+  .tabbar button { flex: 1; border: none; background: none; padding: 13px 0 15px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--ink-faint); font-size: 11px; cursor: pointer; }
+  .tabbar button.active { color: var(--accent); }
+
+  /* ---------- Car detail ---------- */
+  .detail-title { font-family: var(--display); font-weight: 800; font-size: 19px; padding: 7px 18px 0; flex-shrink: 0; }
+  .detail-vin { font-family: var(--mono); font-size: 11.5px; color: var(--ink-faint); padding: 3px 18px 0; flex-shrink: 0; }
+  .stat-pair { display: flex; gap: 10px; padding: 16px 18px 6px; flex-shrink: 0; }
+  .stat-block { flex: 1; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 14px; min-width: 0; }
+  .stat-block .stat-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-faint); }
+  .stat-block .stat-num { font-family: var(--display); font-weight: 800; font-size: 22px; margin-top: 4px; display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
+  .stat-num-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 4px; }
+  .stat-num-row .stat-num { margin-top: 0; }
+  .mileage-edit-btn { width: 23px; height: 23px; border-radius: 50%; background: var(--surface-2); border: none; color: var(--ink-faint); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  .stat-edit-row { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+  .stat-edit-row input {
+    flex: 1; min-width: 0; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 7px 8px; font-family: var(--mono); font-size: 13px; color: var(--ink);
+  }
+  .stat-edit-row button { width: 27px; height: 27px; border-radius: 8px; background: var(--accent); color: var(--on-accent); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+
+  .task-list { flex: 1; overflow-y: auto; padding: 6px 18px 18px; }
+  .task-row { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .task-row:last-child { border-bottom: none; }
+  .task-top { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+  .task-icon { width: 32px; height: 32px; border-radius: 10px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; color: var(--ink-muted); flex-shrink: 0; }
+  .task-main { flex: 1; min-width: 0; }
+  .task-name { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .task-meta { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .task-status-chip { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 999px; flex-shrink: 0; white-space: nowrap; }
+  .task-track { height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+  .task-fill { height: 100%; border-radius: 999px; transition: width 0.2s ease; }
+  .task-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .mark-done-btn { display: flex; align-items: center; gap: 5px; border: none; background: none; color: var(--accent); font-size: 11.5px; font-weight: 700; cursor: pointer; padding: 4px 2px; }
+  .mark-done-btn svg.i { width: 12px; height: 12px; }
+
+  /* ---------- History ---------- */
+  .history-list { flex: 1; overflow-y: auto; padding: 8px 18px 18px; }
+  .history-row { padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .history-row:last-child { border-bottom: none; }
+  .history-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .history-name { font-size: 13.5px; font-weight: 700; }
+  .history-date { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); flex-shrink: 0; white-space: nowrap; }
+  .history-meta { font-family: var(--mono); font-size: 11px; color: var(--ink-muted); margin-top: 4px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .history-empty { padding: 48px 18px; text-align: center; color: var(--ink-faint); font-size: 13px; line-height: 1.5; }
+
+  /* ---------- Add car form ---------- */
+  .field-label { font-size: 11.5px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 0 18px; margin-bottom: 8px; display: block; }
+  .field-label .req { color: var(--tier-due); }
+  .form-body { padding: 10px 0 0; flex: 1; overflow-y: auto; }
+  .text-input, .num-input {
+    width: calc(100% - 36px); margin: 0 18px 18px; background: var(--surface-2); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 12px 13px; font-size: 13px; color: var(--ink); font-family: inherit;
+  }
+  .text-input.static { color: var(--ink-faint); }
+  .text-input::placeholder, .num-input::placeholder { color: var(--ink-faint); }
+  .row-2 { display: flex; gap: 10px; padding: 0 18px; margin-bottom: 0; }
+  .row-2 > div { flex: 1; min-width: 0; }
+  .row-2 .text-input, .row-2 .num-input { margin: 0 0 18px; width: 100%; }
+
+  .preset-chips { display: flex; gap: 7px; flex-wrap: wrap; padding: 0 18px; margin-bottom: 14px; }
+  .preset-chip { border: 1px dashed var(--rule); background: var(--surface-2); color: var(--ink-muted); border-radius: 999px; padding: 7px 13px; font-size: 11.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .preset-chip:hover { color: var(--accent); border-color: var(--accent); }
+
+  .task-block {
+    margin: 0 18px 14px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 15px;
+    position: relative;
+  }
+  .task-block-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .task-block-title { font-size: 12px; font-weight: 700; color: var(--ink-muted); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.04em; }
+  .task-block .text-input, .task-block .num-input { margin: 0 0 10px; width: 100%; }
+  .mini-label { font-size: 10.5px; color: var(--ink-faint); margin: 0 0 4px; display: block; }
+  .mini-row { display: flex; gap: 8px; }
+  .mini-row > div { flex: 1; min-width: 0; }
+
+  .add-task-btn {
+    margin: 0 18px 20px; width: calc(100% - 36px); background: var(--surface-2); border: 1.5px dashed var(--rule);
+    border-radius: 12px; padding: 13px; display: flex; align-items: center; justify-content: center; gap: 6px;
+    color: var(--accent); font-size: 12.5px; font-weight: 700; cursor: pointer;
+  }
+  .save-btn {
+    margin: 12px 18px 20px; background: var(--accent); color: var(--on-accent); border: none; border-radius: 12px;
+    padding: 15px; font-size: 14px; font-weight: 700; text-align: center; cursor: pointer; width: calc(100% - 36px);
+  }
+  .section-divider { padding: 14px 18px 0; display: flex; align-items: baseline; justify-content: space-between; }
+  .section-divider .st { font-size: 11.5px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .section-divider .sc { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
+
+  /* ---------- Settings ---------- */
+  .settings-group { padding: 4px 18px 0; margin-bottom: 22px; }
+  .settings-group-title { font-size: 11.5px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 10px; }
+  .segmented { display: flex; background: var(--surface-2); border-radius: 10px; padding: 3px; gap: 3px; }
+  .segmented button {
+    flex: 1; border: none; background: none; padding: 10px 6px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    color: var(--ink-muted); cursor: pointer; font-family: inherit;
+  }
+  .segmented button.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .setting-row {
+    display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 10px; padding: 13px 14px; margin-top: 8px;
+  }
+  .setting-row .icon-btn { background: var(--surface-2); cursor: default; }
+  .setting-text { flex: 1; min-width: 0; }
+  .setting-text .t1 { font-size: 13px; font-weight: 600; }
+  .setting-text .t2 { font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); margin-top: 1px; }
+  .switch { width: 36px; height: 21px; border-radius: 999px; background: var(--surface-3); position: relative; flex-shrink: 0; border: none; cursor: pointer; }
+  .switch::after { content: ""; position: absolute; width: 17px; height: 17px; border-radius: 50%; background: var(--surface); top: 2px; left: 2px; transition: left 0.15s ease; }
+  .switch.on { background: var(--accent); }
+  .switch.on::after { left: 17px; background: var(--on-accent); }
+  .stepper { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .stepper button { width: 25px; height: 25px; border-radius: 50%; border: 1px solid var(--rule); background: var(--surface-2); color: var(--ink-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .stepper .val { font-family: var(--mono); font-size: 13px; font-weight: 700; min-width: 36px; text-align: center; font-variant-numeric: tabular-nums; }
+
+  .notif-preview { margin-top: 10px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 13px 14px; display: flex; gap: 10px; }
+  .notif-icon { width: 29px; height: 29px; border-radius: 9px; background: var(--accent); color: var(--on-accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .notif-body { flex: 1; min-width: 0; }
+  .notif-head { display: flex; justify-content: space-between; gap: 8px; }
+  .notif-title { font-size: 11.5px; font-weight: 700; }
+  .notif-time { font-family: var(--mono); font-size: 9.5px; color: var(--ink-faint); flex-shrink: 0; }
+  .notif-text { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; line-height: 1.4; }
+  .notif-caption { font-size: 10.5px; color: var(--ink-faint); margin-top: 8px; line-height: 1.4; }
+
+  /* ---------- Interactive stage ---------- */
+  .stage { display: flex; flex-direction: column; align-items: center; margin-top: 8px; }
+  .route-pill { font-family: var(--mono); font-size: 12px; color: var(--ink-muted); background: var(--surface); border: 1px solid var(--rule); border-radius: 999px; padding: 6px 14px; margin-bottom: 16px; }
+  .hint { font-size: 12.5px; color: var(--ink-faint); margin-top: 18px; text-align: center; max-width: 50ch; }
+
+  footer { max-width: 1180px; margin: 60px auto 0; padding: 24px 24px 0; border-top: 1px solid var(--rule); font-size: 12.5px; color: var(--ink-faint); }
+  footer code { font-family: var(--mono); background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+  /* ---------- Style guide: tokens ---------- */
+  .tokens-sub { font-family: var(--display); font-weight: 800; font-size: 15px; margin: 0 0 12px; }
+  .tokens-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin: 0 0 32px; }
+  .token-card { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 9px; }
+  .token-swatch-row { display: flex; gap: 8px; }
+  .token-swatch { flex: 1; height: 42px; border-radius: 8px; border: 1px solid var(--rule); position: relative; }
+  .token-swatch .tag { position: absolute; bottom: 3px; left: 5px; font-family: var(--mono); font-size: 8.5px; padding: 1px 4px; border-radius: 4px; background: rgba(0,0,0,0.35); color: #fff; }
+  .token-name { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--ink); }
+  .token-hex-row { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; color: var(--ink-faint); }
+  .token-usage { font-size: 11.5px; color: var(--ink-muted); line-height: 1.4; }
+
+  .font-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .font-card { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 18px; }
+  .font-card .fc-sample { font-family: var(--display); font-weight: 800; font-size: 24px; margin-bottom: 10px; letter-spacing: -0.01em; }
+  .font-card .fc-sample.sans { font-family: var(--sans); font-weight: 500; font-size: 15px; }
+  .font-card .fc-sample.mono { font-family: var(--mono); font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .font-card .fc-stack { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); word-break: break-word; line-height: 1.5; }
+  .font-card .fc-usage { font-size: 11.5px; color: var(--ink-muted); margin-top: 10px; line-height: 1.4; }
+
+  /* ---------- Style guide: app icon ---------- */
+  .appicon-list { display: flex; flex-direction: column; gap: 14px; }
+  .appicon-card { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 20px; display: grid; grid-template-columns: minmax(200px, 1fr) auto; gap: 24px; align-items: center; }
+  .appicon-meta .name { font-family: var(--display); font-weight: 800; font-size: 15px; color: var(--ink); }
+  .appicon-meta .pkg { font-family: var(--mono); font-size: 10.5px; color: var(--accent); margin-top: 4px; }
+  .appicon-meta .note { font-size: 12px; color: var(--ink-muted); margin-top: 8px; line-height: 1.5; max-width: 44ch; }
+  .appicon-meta .note b { color: var(--ink); font-weight: 700; }
+  .appicon-set { display: flex; flex-wrap: wrap; gap: 26px; }
+  .appicon-variant { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .appicon-sizes { display: flex; align-items: center; gap: 9px; }
+  .appicon-tag { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); }
+  .appicon { display: block; flex-shrink: 0; border-radius: 22.5%; overflow: hidden; }
+  .appicon svg { display: block; width: 100%; height: 100%; }
+  .appicon.s112 { width: 112px; height: 112px; }
+  .appicon.s48 { width: 48px; height: 48px; }
+  .appicon.s29 { width: 29px; height: 29px; }
+  .appicon.round { border-radius: 50%; }
+  .appicon.bg-dark { background: #0a0e15; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); --ic-fg: #e9edf3; --ic-accent: #0ea5b7; --ic-warn: #e2922e; --ic-on: #ffffff; }
+  .appicon.bg-accent { background: #0ea5b7; --ic-fg: #ffffff; --ic-accent: #ffffff; --ic-warn: #e2922e; --ic-dot: #10151d; --ic-on: #0ea5b7; }
+  .appicon.bg-light { background: #ffffff; box-shadow: inset 0 0 0 1px rgba(16,21,29,0.1); --ic-fg: #10151d; --ic-accent: #0ea5b7; --ic-warn: #e2922e; --ic-on: #ffffff; }
+  @media (max-width: 860px) { .appicon-card { grid-template-columns: 1fr; } }
+
+  /* ---------- Style guide: components ---------- */
+  .kit-note { font-size: 13px; color: var(--ink-muted); line-height: 1.6; max-width: 70ch; margin: 0 0 28px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 14px 16px; }
+  .kit-note code { font-family: var(--mono); background: var(--surface-2); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
+  .component-groups { display: flex; flex-direction: column; gap: 30px; }
+  .component-group-title { font-family: var(--display); font-weight: 800; font-size: 15px; margin: 0 0 12px; display: flex; align-items: baseline; gap: 8px; }
+  .component-group-title .cnt { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--ink-faint); }
+  .component-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+  .component-card { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .component-preview { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; min-height: 54px; padding: 10px; background: var(--bg); border-radius: 10px; }
+  .component-meta .name { font-size: 12.5px; font-weight: 700; color: var(--ink); }
+  .component-meta .pkg { font-family: var(--mono); font-size: 10.5px; color: var(--accent); margin-top: 4px; }
+  .component-meta .note { font-size: 11px; color: var(--ink-faint); margin-top: 5px; line-height: 1.45; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .task-fill, .switch::after { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="top-row">
+    <div>
+      <p class="eyebrow">Портфолио-проект 3 · Дизайн-макет</p>
+      <h1>Одометр — регламент ТО, который считает в <em>километрах</em></h1>
+    </div>
+  </div>
+  <p class="subtitle">Единственный цветовой язык в приложении — близость регламентной работы к сроку по пробегу и по времени (что наступит раньше): пока запас большой — цвет спокойный тил, когда въезжаем в окно напоминания — янтарь, после срока — красный. Сначала — кликабельный макет: открывай авто, отмечай работы выполненными, смотри историю ТО и правь пробег на ходу. Ниже — статичные экраны в обеих темах.</p>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--tier-ok)"></div><div class="range">запас &gt; окна напоминания</div><div class="label">В порядке</div></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--tier-soon)"></div><div class="range">остаток ≤ окна напоминания</div><div class="label">Пора готовиться</div></div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--tier-due)"></div><div class="range">срок по км или по времени истёк</div><div class="label">Просрочено</div></div>
+  </div>
+  <p class="legend-caption">Окно напоминания задаётся пользователем для каждой работы в тыс. км до срока; если указан ещё и интервал по времени (мес), статус берётся по тому сроку, что наступает раньше. Цвета тиров одинаковые в обеих темах — меняются только нейтральные тона фона и текста.</p>
+
+  <!-- ================= INTERACTIVE ================= -->
+  <div class="section-block">
+    <div class="top-row" style="margin-bottom:4px">
+      <div class="section-head"><span class="theme-dot" style="background:var(--accent);box-shadow:0 0 0 3px rgba(14,165,183,0.18)"></span><h2>Интерактивный макет</h2></div>
+      <button class="theme-btn" id="themeBtn" aria-label="Переключить тему"></button>
+    </div>
+    <p class="section-sub">Открывай авто, отмечай работы выполненными, правь пробег на ходу, смотри историю ТО и добавляй новое авто с готовыми пресетами работ — тема переключается кнопкой справа.</p>
+    <div class="stage">
+      <div class="route-pill" id="routeLabel">Мои авто</div>
+      <div class="phone lg interactive"><div class="notch"></div><div class="screen" id="interactiveScreen"></div></div>
+      <p class="hint">Статус и прогресс каждой работы считаются в JS из текущего пробега, интервала замены (км и/или мес) и окна напоминания — ровно то, что легло бы в таблицы <code style="font-family:var(--mono)">cars</code>, <code style="font-family:var(--mono)">maintenance_tasks</code> и <code style="font-family:var(--mono)">service_history</code>.</p>
+    </div>
+  </div>
+
+  <!-- ================= LIGHT EXHIBIT ================= -->
+  <div class="section-block panel locked-light">
+    <div class="section-head"><span class="theme-dot light"></span><h2>Экраны · светлая тема</h2></div>
+    <p class="section-sub">Статичный набор — пять ключевых экранов приложения.</p>
+    <div class="gallery" id="galleryLight"></div>
+  </div>
+
+  <!-- ================= DARK EXHIBIT ================= -->
+  <div class="section-block panel locked-dark">
+    <div class="section-head"><span class="theme-dot dark"></span><h2>Экраны · тёмная тема</h2></div>
+    <p class="section-sub">Те же данные, тот же макет — только нейтральные тона инвертированы.</p>
+    <div class="gallery" id="galleryDark"></div>
+  </div>
+
+  <!-- ================= STYLE GUIDE: TOKENS ================= -->
+  <div class="section-block panel">
+    <div class="section-head"><h2>Палитра и шрифты</h2></div>
+    <p class="section-sub">Токены, использованные в макете. Нейтральные тона переключаются по теме, акцент и цвета статусов — фиксированные константы.</p>
+
+    <p class="tokens-sub">Нейтральные тона · светлая / тёмная</p>
+    <div class="tokens-grid">
+      <div class="token-card"><div class="token-name">--bg</div>
+        <div class="token-swatch-row"><div class="token-swatch" style="background:#eef1f5"><span class="tag">light</span></div><div class="token-swatch" style="background:#0a0e15"><span class="tag">dark</span></div></div>
+        <div class="token-hex-row"><span>#eef1f5</span><span>#0a0e15</span></div>
+        <div class="token-usage">Фон экрана под карточками.</div></div>
+      <div class="token-card"><div class="token-name">--surface</div>
+        <div class="token-swatch-row"><div class="token-swatch" style="background:#ffffff"><span class="tag">light</span></div><div class="token-swatch" style="background:#121823"><span class="tag">dark</span></div></div>
+        <div class="token-hex-row"><span>#ffffff</span><span>#121823</span></div>
+        <div class="token-usage">Карточки, поля, нижняя навигация.</div></div>
+      <div class="token-card"><div class="token-name">--surface-2</div>
+        <div class="token-swatch-row"><div class="token-swatch" style="background:#e3e8ee"><span class="tag">light</span></div><div class="token-swatch" style="background:#1a222f"><span class="tag">dark</span></div></div>
+        <div class="token-hex-row"><span>#e3e8ee</span><span>#1a222f</span></div>
+        <div class="token-usage">Фон полей ввода, icon-button, трек прогресс-бара.</div></div>
+      <div class="token-card"><div class="token-name">--surface-3</div>
+        <div class="token-swatch-row"><div class="token-swatch" style="background:#ccd5de"><span class="tag">light</span></div><div class="token-swatch" style="background:#242e3d"><span class="tag">dark</span></div></div>
+        <div class="token-hex-row"><span>#ccd5de</span><span>#242e3d</span></div>
+        <div class="token-usage">Выключенный switch, пустой сегмент кольца-гейджа.</div></div>
+      <div class="token-card"><div class="token-name">--ink</div>
+        <div class="token-swatch-row"><div class="token-swatch" style="background:#10151d"><span class="tag">light</span></div><div class="token-swatch" style="background:#e9edf3"><span class="tag">dark</span></div></div>
+        <div class="token-hex-row"><span>#10151d</span><span>#e9edf3</span></div>
+        <div class="token-usage">Основной текст, заголовки.</div></div>
+      <div class="token-card"><div class="token-name">--ink-muted</div>
+        <div class="token-swatch-row"><div class="token-swatch" style="background:#5c6774"><span class="tag">light</span></div><div class="token-swatch" style="background:#8d99a8"><span class="tag">dark</span></div></div>
+        <div class="token-hex-row"><span>#5c6774</span><span>#8d99a8</span></div>
+        <div class="token-usage">Вторичный текст, подписи полей.</div></div>
+      <div class="token-card"><div class="token-name">--ink-faint</div>
+        <div class="token-swatch-row"><div class="token-swatch" style="background:#97a2ae"><span class="tag">light</span></div><div class="token-swatch" style="background:#566072"><span class="tag">dark</span></div></div>
+        <div class="token-hex-row"><span>#97a2ae</span><span>#566072</span></div>
+        <div class="token-usage">Третичный текст, плейсхолдеры, неактивные иконки.</div></div>
+      <div class="token-card"><div class="token-name">--rule</div>
+        <div class="token-swatch-row"><div class="token-swatch" style="background:#dbe1e8"><span class="tag">light</span></div><div class="token-swatch" style="background:#1e2733"><span class="tag">dark</span></div></div>
+        <div class="token-hex-row"><span>#dbe1e8</span><span>#1e2733</span></div>
+        <div class="token-usage">Границы карточек и разделители списков.</div></div>
+    </div>
+
+    <p class="tokens-sub">Акцент и статусы · константы в обеих темах</p>
+    <div class="tokens-grid">
+      <div class="token-card"><div class="token-name">--accent / --on-accent</div>
+        <div class="token-swatch-row"><div class="token-swatch" style="background:#0ea5b7"></div></div>
+        <div class="token-hex-row"><span>#0ea5b7</span><span>текст #fff</span></div>
+        <div class="token-usage">Бренд: FAB, основная кнопка, активная вкладка, активный сегмент темы.</div></div>
+      <div class="token-card"><div class="token-name">--tier-ok</div>
+        <div class="token-swatch-row"><div class="token-swatch" style="background:#1fab8c"></div></div>
+        <div class="token-hex-row"><span>#1fab8c</span><span>текст #fff</span></div>
+        <div class="token-usage">Статус «в порядке» — запас больше окна напоминания.</div></div>
+      <div class="token-card"><div class="token-name">--tier-soon</div>
+        <div class="token-swatch-row"><div class="token-swatch" style="background:#e2922e"></div></div>
+        <div class="token-hex-row"><span>#e2922e</span><span>текст #fff</span></div>
+        <div class="token-usage">Статус «пора готовиться» — вошли в окно напоминания.</div></div>
+      <div class="token-card"><div class="token-name">--tier-due</div>
+        <div class="token-swatch-row"><div class="token-swatch" style="background:#e34b3f"></div></div>
+        <div class="token-hex-row"><span>#e34b3f</span><span>текст #fff</span></div>
+        <div class="token-usage">Статус «просрочено» — срок по км или по времени истёк.</div></div>
+    </div>
+
+    <p class="tokens-sub">Шрифты</p>
+    <div class="font-grid">
+      <div class="font-card"><div class="fc-sample">Одометр 84 300</div>
+        <div class="fc-stack">--display: -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif</div>
+        <div class="fc-usage">Заголовки экранов, h1, крупные цифры (пробег, цифра в гейдже).</div></div>
+      <div class="font-card"><div class="fc-sample sans">Осталось 700 км до замены фильтра</div>
+        <div class="fc-stack">--sans: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif</div>
+        <div class="fc-usage">Основной текст интерфейса: названия работ, подписи, кнопки.</div></div>
+      <div class="font-card"><div class="fc-sample mono">84 300 КМ · VIN · 09:00</div>
+        <div class="fc-stack">--mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace</div>
+        <div class="fc-usage">Числовые и табличные данные: пробег, VIN, даты, время, лейблы полей.</div></div>
+    </div>
+  </div>
+
+  <!-- ================= STYLE GUIDE: APP ICON ================= -->
+  <div class="section-block panel" id="appIcon">
+    <div class="section-head"><h2>Иконка приложения</h2></div>
+    <p class="section-sub">Пять вариантов знака на трёх фонах. Цвета иконки — константы и не зависят от темы макета. Под каждой плиткой проверка читаемости: 48 px, 29 px и 48 px в круглой маске Android.</p>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <defs>
+        <clipPath id="ic-odo-clip"><rect x="24" y="40" width="72" height="40" rx="9"/></clipPath>
+      </defs>
+      <symbol id="ic-ring" viewBox="0 0 120 120">
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M38.79 81.21A30 30 0 1 1 85.44 44.1" stroke="var(--ic-accent)"/>
+          <path d="M89.98 58.95A30 30 0 0 1 81.21 81.21" stroke="var(--ic-warn)"/>
+        </g>
+        <circle cx="60" cy="60" r="5.5" fill="var(--ic-fg)"/>
+      </symbol>
+      <symbol id="ic-wrench" viewBox="0 0 120 120">
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M38.79 81.21A30 30 0 1 1 85.44 44.1" stroke="var(--ic-accent)"/>
+          <path d="M89.98 58.95A30 30 0 0 1 81.21 81.21" stroke="var(--ic-warn)"/>
+        </g>
+        <g transform="translate(60 60) scale(1.45) translate(-12 -12)" fill="var(--ic-key-fill, none)" stroke="var(--ic-key, var(--ic-fg))" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.4-3.4a6 6 0 0 1-7.8 7.8L6.5 20.4a2.1 2.1 0 0 1-3-3l6.7-6.7a6 6 0 0 1 7.8-7.8l-3.3 3.4Z"/>
+        </g>
+      </symbol>
+      <symbol id="ic-ptrack" viewBox="0 0 120 120">
+        <path d="M43 87V33H61A17 17 0 0 1 61 67H43" fill="none" stroke="var(--ic-accent)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="43" cy="79" r="4" fill="var(--ic-dot, var(--ic-warn))"/>
+      </symbol>
+      <symbol id="ic-odo" viewBox="0 0 120 120">
+        <g clip-path="url(#ic-odo-clip)">
+          <rect x="72" y="40" width="24" height="40" fill="var(--ic-accent)"/>
+          <g style="font-family:var(--mono);font-size:26px;font-weight:700" text-anchor="middle">
+            <text x="36" y="69" fill="var(--ic-fg)">0</text>
+            <text x="60" y="69" fill="var(--ic-fg)">4</text>
+            <text x="84" y="58" fill="var(--ic-on)">2</text>
+            <text x="84" y="91" fill="var(--ic-on)">3</text>
+          </g>
+          <path d="M48 40V80" stroke="var(--ic-fg)" stroke-width="2" opacity="0.3"/>
+        </g>
+        <rect x="24" y="40" width="72" height="40" rx="9" fill="none" stroke="var(--ic-fg)" stroke-width="3"/>
+      </symbol>
+      <symbol id="ic-drop" viewBox="0 0 120 120">
+        <g transform="translate(60 60) scale(3.6) translate(-12 -11.8)">
+          <path d="M12 3s6 6.5 6 11a6 6 0 1 1-12 0c0-4.5 6-11 6-11Z" fill="var(--ic-accent)"/>
+          <path d="M9.2 14.3l2 2 3.7-4.1" fill="none" stroke="var(--ic-on)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </symbol>
+    </svg>
+    <div class="appicon-list">
+      <div class="appicon-card">
+        <div class="appicon-meta"><div class="name">Кольцо-индикатор</div><div class="pkg">#ic-ring</div><div class="note">Незамкнутая шкала прибора, последний сегмент — «скоро срок».</div><div class="note"><b>+</b> Повторяет главную идею приложения — статус работ; читается в любом размере.</div><div class="note"><b>−</b> Кольца-прогрессы есть у многих трекеров, мало «автомобильности».</div></div>
+        <div class="appicon-set">
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-ring"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-ring"/></svg></span><span class="appicon s29 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-ring"/></svg></span><span class="appicon s48 round bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-ring"/></svg></span></div>
+            <span class="appicon-tag">тёмный</span>
+          </div>
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-ring"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-ring"/></svg></span><span class="appicon s29 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-ring"/></svg></span><span class="appicon s48 round bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-ring"/></svg></span></div>
+            <span class="appicon-tag">бирюзовый</span>
+          </div>
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-ring"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-ring"/></svg></span><span class="appicon s29 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-ring"/></svg></span><span class="appicon s48 round bg-light"><svg viewBox="0 0 120 120"><use href="#ic-ring"/></svg></span></div>
+            <span class="appicon-tag">светлый</span>
+          </div>
+        </div>
+      </div>
+      <div class="appicon-card">
+        <div class="appicon-meta"><div class="name">Ключ в кольце</div><div class="pkg">#ic-wrench</div><div class="note">Кольцо-индикатор с сегментом «скоро срок», внутри гаечный ключ из набора иконок.</div><div class="note"><b>+</b> Сразу понятно «обслуживание авто», стиль совпадает с иконками внутри приложения.</div><div class="note"><b>−</b> Самый заезженный символ категории; в мелком размере головка ключа слипается.</div></div>
+        <div class="appicon-set">
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-wrench"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-wrench"/></svg></span><span class="appicon s29 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-wrench"/></svg></span><span class="appicon s48 round bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-wrench"/></svg></span></div>
+            <span class="appicon-tag">тёмный</span>
+          </div>
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-wrench"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-wrench"/></svg></span><span class="appicon s29 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-wrench"/></svg></span><span class="appicon s48 round bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-wrench"/></svg></span></div>
+            <span class="appicon-tag">бирюзовый</span>
+          </div>
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-wrench"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-wrench"/></svg></span><span class="appicon s29 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-wrench"/></svg></span><span class="appicon s48 round bg-light"><svg viewBox="0 0 120 120"><use href="#ic-wrench"/></svg></span></div>
+            <span class="appicon-tag">светлый</span>
+          </div>
+        </div>
+      </div>
+      <div class="appicon-card">
+        <div class="appicon-meta"><div class="name">Монограмма P-трасса</div><div class="pkg">#ic-ptrack</div><div class="note">Буква P одной линией: вертикаль — пит-лейн, петля — трасса, точка — машина в боксах.</div><div class="note"><b>+</b> Уникальный знак, привязан к названию, хорошо живёт в монохроме.</div><div class="note"><b>−</b> Метафору трассы считают не все; «P» легко спутать с парковкой.</div></div>
+        <div class="appicon-set">
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-ptrack"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-ptrack"/></svg></span><span class="appicon s29 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-ptrack"/></svg></span><span class="appicon s48 round bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-ptrack"/></svg></span></div>
+            <span class="appicon-tag">тёмный</span>
+          </div>
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-ptrack"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-ptrack"/></svg></span><span class="appicon s29 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-ptrack"/></svg></span><span class="appicon s48 round bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-ptrack"/></svg></span></div>
+            <span class="appicon-tag">бирюзовый</span>
+          </div>
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-ptrack"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-ptrack"/></svg></span><span class="appicon s29 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-ptrack"/></svg></span><span class="appicon s48 round bg-light"><svg viewBox="0 0 120 120"><use href="#ic-ptrack"/></svg></span></div>
+            <span class="appicon-tag">светлый</span>
+          </div>
+        </div>
+      </div>
+      <div class="appicon-card">
+        <div class="appicon-meta"><div class="name">Одометр</div><div class="pkg">#ic-odo</div><div class="note">Окошко с барабанами цифр, последний застыл между значениями.</div><div class="note"><b>+</b> Отсылка к моноширинным числам пробега в интерфейсе; ни на что не похоже.</div><div class="note"><b>−</b> В мелком размере цифры превращаются в шум, тесно в круглой маске.</div></div>
+        <div class="appicon-set">
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-odo"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-odo"/></svg></span><span class="appicon s29 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-odo"/></svg></span><span class="appicon s48 round bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-odo"/></svg></span></div>
+            <span class="appicon-tag">тёмный</span>
+          </div>
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-odo"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-odo"/></svg></span><span class="appicon s29 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-odo"/></svg></span><span class="appicon s48 round bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-odo"/></svg></span></div>
+            <span class="appicon-tag">бирюзовый</span>
+          </div>
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-odo"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-odo"/></svg></span><span class="appicon s29 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-odo"/></svg></span><span class="appicon s48 round bg-light"><svg viewBox="0 0 120 120"><use href="#ic-odo"/></svg></span></div>
+            <span class="appicon-tag">светлый</span>
+          </div>
+        </div>
+      </div>
+      <div class="appicon-card">
+        <div class="appicon-meta"><div class="name">Капля + галочка</div><div class="pkg">#ic-drop</div><div class="note">Капля масла с галочкой внутри — «замена выполнена».</div><div class="note"><b>+</b> Простой силуэт, самый частый сценарий приложения.</div><div class="note"><b>−</b> Сужает смысл до масла; капля читается как вода или здоровье.</div></div>
+        <div class="appicon-set">
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-drop"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-drop"/></svg></span><span class="appicon s29 bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-drop"/></svg></span><span class="appicon s48 round bg-dark"><svg viewBox="0 0 120 120"><use href="#ic-drop"/></svg></span></div>
+            <span class="appicon-tag">тёмный</span>
+          </div>
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-drop"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-drop"/></svg></span><span class="appicon s29 bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-drop"/></svg></span><span class="appicon s48 round bg-accent"><svg viewBox="0 0 120 120"><use href="#ic-drop"/></svg></span></div>
+            <span class="appicon-tag">бирюзовый</span>
+          </div>
+          <div class="appicon-variant">
+            <span class="appicon s112 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-drop"/></svg></span>
+            <div class="appicon-sizes"><span class="appicon s48 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-drop"/></svg></span><span class="appicon s29 bg-light"><svg viewBox="0 0 120 120"><use href="#ic-drop"/></svg></span><span class="appicon s48 round bg-light"><svg viewBox="0 0 120 120"><use href="#ic-drop"/></svg></span></div>
+            <span class="appicon-tag">светлый</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= STYLE GUIDE: COMPONENTS ================= -->
+  <div class="section-block panel">
+    <div class="section-head"><h2>Переиспользуемые компоненты</h2></div>
+    <p class="section-sub">Атомы интерфейса, которые повторяются на всех экранах — кнопки, поля, стрелки/степперы, переключатели и карточки. При разработке их нужно вынести в общий пакет (например <code style="font-family:var(--mono);background:var(--surface-2);padding:1px 5px;border-radius:4px">ui-kit</code>) и переиспользовать, а не дублировать по экранам.</p>
+    <p class="kit-note">Все компоненты собраны только из нейтральных токенов (<code>surface</code> / <code>rule</code> / <code>ink-*</code>) и трёх констант состояния (<code>accent</code>, <code>tier-ok/soon/due</code>) — поэтому пакет не придётся переписывать при доработке темы или палитры.</p>
+
+    <div class="component-groups">
+
+      <div>
+        <div class="component-group-title">Кнопки <span class="cnt">6 шт.</span></div>
+        <div class="component-grid">
+          <div class="component-card">
+            <div class="component-preview"><button class="save-btn" style="width:auto;margin:0;padding:11px 22px;">Сохранить авто</button></div>
+            <div class="component-meta"><div class="name">Основная кнопка</div><div class="pkg">&lt;PrimaryButton label /&gt;</div><div class="note">Full-width, accent-фон, используется как финальное действие формы.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview"><button class="fab" style="position:static;"><span class="icon-slot" data-icon="plus" data-size="21"></span></button></div>
+            <div class="component-meta"><div class="name">FAB</div><div class="pkg">&lt;Fab icon onPress /&gt;</div><div class="note">Круглая плавающая кнопка основного действия экрана-списка.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview"><button class="icon-btn"><span class="icon-slot" data-icon="chevronLeft" data-size="16"></span></button><button class="icon-btn"><span class="icon-slot" data-icon="pencil" data-size="16"></span></button><button class="icon-btn"><span class="icon-slot" data-icon="trash" data-size="16"></span></button></div>
+            <div class="component-meta"><div class="name">Icon-button</div><div class="pkg">&lt;IconButton icon /&gt;</div><div class="note">Круглая вторичная кнопка: назад, редактировать, удалить, история.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview"><button class="preset-chip">+ Масло</button><button class="preset-chip">+ ГРМ</button></div>
+            <div class="component-meta"><div class="name">Preset-чип</div><div class="pkg">&lt;Chip variant="preset" /&gt;</div><div class="note">Пунктирная пилюля быстрого добавления — пресеты регламентных работ.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview"><div class="segmented" style="width:210px;"><button class="active">Светлая</button><button>Тёмная</button></div></div>
+            <div class="component-meta"><div class="name">Сегмент-контрол</div><div class="pkg">&lt;Segmented options active /&gt;</div><div class="note">Группа взаимоисключающих кнопок: тема, единицы измерения.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview"><div class="tabbar" style="border-top:none;width:210px;"><button class="active">Авто</button><button>Настройки</button></div></div>
+            <div class="component-meta"><div class="name">Пункт таб-бара</div><div class="pkg">&lt;TabBarItem label icon active /&gt;</div><div class="note">Нижняя навигация, активный пункт подсвечен accent-цветом.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="component-group-title">Поля <span class="cnt">4 шт.</span></div>
+        <div class="component-grid">
+          <div class="component-card">
+            <div class="component-preview"><div class="text-input static" style="width:180px;margin:0;">Kia Rio</div></div>
+            <div class="component-meta"><div class="name">Текстовое поле</div><div class="pkg">&lt;TextField label placeholder /&gt;</div><div class="note">Марка, VIN, название работы, дата (как текст).</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview"><div class="num-input static" style="width:140px;margin:0;">84 300</div></div>
+            <div class="component-meta"><div class="name">Числовое поле</div><div class="pkg">&lt;NumberField label unit /&gt;</div><div class="note">Пробег, интервалы, окно напоминания — моноширинные цифры.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview"><div><span class="mini-label">Интервал, км</span><div class="num-input static" style="width:150px;margin:0;">10 000</div></div></div>
+            <div class="component-meta"><div class="name">Мини-поле с лейблом</div><div class="pkg">&lt;LabeledMiniField label /&gt;</div><div class="note">Парные компактные поля в блоке регламентной работы.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview"><div class="stat-edit-row" style="width:170px;"><input value="84300"><button><span class="icon-slot" data-icon="check" data-size="14"></span></button></div></div>
+            <div class="component-meta"><div class="name">Инлайн-редактирование</div><div class="pkg">&lt;InlineEditField value onSave /&gt;</div><div class="note">Быстрое обновление пробега прямо на экране авто, без формы.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="component-group-title">Стрелки и степперы <span class="cnt">2 шт.</span></div>
+        <div class="component-grid">
+          <div class="component-card">
+            <div class="component-preview"><button class="icon-btn"><span class="icon-slot" data-icon="chevronLeft" data-size="16"></span></button></div>
+            <div class="component-meta"><div class="name">Стрелка-назад (chevron)</div><div class="pkg">&lt;IconButton icon="chevron-left" /&gt;</div><div class="note">Навигация назад в топ-баре — тот же Icon-button, другая иконка.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview"><div class="stepper"><button><span class="icon-slot" data-icon="minus" data-size="12"></span></button><span class="val">2</span><button><span class="icon-slot" data-icon="plus" data-size="12"></span></button></div></div>
+            <div class="component-meta"><div class="name">Степпер +/−</div><div class="pkg">&lt;Stepper value min max onChange /&gt;</div><div class="note">Числовой выбор шагом 1 — окно напоминания по умолчанию в настройках.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="component-group-title">Переключатели и индикаторы <span class="cnt">4 шт.</span></div>
+        <div class="component-grid">
+          <div class="component-card">
+            <div class="component-preview"><button class="switch on"></button><button class="switch"></button></div>
+            <div class="component-meta"><div class="name">Switch</div><div class="pkg">&lt;Switch checked onChange /&gt;</div><div class="note">Вкл/выкл push-уведомлений и бинарных настроек.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview"><span class="task-status-chip" style="background:#1fab8c;color:#fff;">В порядке</span><span class="task-status-chip" style="background:#e2922e;color:#fff;">Скоро</span><span class="task-status-chip" style="background:#e34b3f;color:#fff;">Просрочено</span></div>
+            <div class="component-meta"><div class="name">Статус-чип</div><div class="pkg">&lt;StatusChip status="ok|soon|due" /&gt;</div><div class="note">Цвет и текст выводятся из одной и той же функции статуса на всех экранах.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview" style="flex-direction:column;align-items:stretch;gap:8px;">
+              <div class="task-track"><div class="task-fill" style="width:65%;background:#1fab8c;"></div></div>
+              <div class="task-track"><div class="task-fill" style="width:100%;background:#e34b3f;"></div></div>
+            </div>
+            <div class="component-meta"><div class="name">Progress bar</div><div class="pkg">&lt;ProgressBar value color /&gt;</div><div class="note">Заполнение = (пробег − последняя замена) / интервал.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview">
+              <div class="gauge" style="background:conic-gradient(#e2922e 25%, #ccd5de 0);"><div class="gauge-inner" style="color:#e2922e;">1</div></div>
+              <div class="gauge" style="background:conic-gradient(#1fab8c 6%, #ccd5de 0);"><div class="gauge-inner" style="color:#1fab8c;">0</div></div>
+            </div>
+            <div class="component-meta"><div class="name">Gauge ring</div><div class="pkg">&lt;GaugeRing value color count /&gt;</div><div class="note">Кольцо на карточке авто: цвет — худший статус, цифра — число скорых/просроченных работ.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="component-group-title">Карточки-контейнеры <span class="cnt">3 шт.</span></div>
+        <div class="component-grid">
+          <div class="component-card">
+            <div class="component-preview" style="flex-direction:column;align-items:stretch;">
+              <div class="car-card" style="margin:0;"><div class="car-icon"><span class="icon-slot" data-icon="car" data-size="19"></span></div><div class="car-main"><div class="car-name">Kia Rio</div><div class="car-mileage">84 300 км</div></div></div>
+            </div>
+            <div class="component-meta"><div class="name">Карточка-строка (List Card)</div><div class="pkg">&lt;Card variant="row" /&gt;</div><div class="note">surface + border 1px rule + radius 12–14px — базовый паттерн для car-card, stat-block, task-block.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview" style="flex-direction:column;align-items:stretch;">
+              <div class="stat-block" style="margin:0;"><div class="stat-label">Пробег</div><div class="stat-num">84 300</div></div>
+            </div>
+            <div class="component-meta"><div class="name">Статистический блок</div><div class="pkg">&lt;Card variant="stat" label value /&gt;</div><div class="note">Парные плитки метрик в хедере экрана деталей авто.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview" style="flex-direction:column;align-items:stretch;">
+              <div class="notif-preview" style="margin:0;"><div class="notif-icon"><span class="icon-slot" data-icon="bell" data-size="14"></span></div><div class="notif-body"><div class="notif-head"><span class="notif-title">Одометр</span><span class="notif-time">сейчас</span></div><div class="notif-text">Пора заменить фильтр</div></div></div>
+            </div>
+            <div class="component-meta"><div class="name">Превью-уведомление</div><div class="pkg">&lt;Card variant="notification" /&gt;</div><div class="note">Используется и как реальный пуш, и как статичный пример в настройках.</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    Дизайн-макет для проекта «Регламентные работы по автомобилю» из раздела <strong>Обучение и задачи</strong>. Схема данных: <code>cars(id, brand, mileage_km, vin)</code>, <code>maintenance_tasks(id, car_id, name, interval_km, last_done_km, reminder_window_km, interval_months, last_done_date)</code> и <code>service_history(id, car_id, task_name, date, mileage_km, cost_rub, service_name)</code> — статус, прогресс и отметка «выполнено» выводятся из этих полей на лету.
+  </footer>
+</div>
+
+<script>
+(function () {
+  var TODAY = '2026-10-06';
+
+  var ICONS = {
+    car: '<path d="M3 13l1.6-4.8A2 2 0 0 1 6.5 7h11a2 2 0 0 1 1.9 1.2L21 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4Z"/><circle cx="7.5" cy="17.2" r="1.4"/><circle cx="16.5" cy="17.2" r="1.4"/>',
+    gauge: '<path d="M12 12l3.2-3.2"/><circle cx="12" cy="12" r="1.8"/><path d="M4.5 15.5A8 8 0 0 1 6 7"/><path d="M19.5 15.5A8 8 0 0 0 18 7"/><path d="M4 19h16"/>',
+    droplet: '<path d="M12 3s6 6.5 6 11a6 6 0 1 1-12 0c0-4.5 6-11 6-11Z"/>',
+    disc: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6"/>',
+    filter: '<path d="M4 4h16l-6.2 8.4V19l-3.6 2v-8.6L4 4Z"/>',
+    wrench: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.4-3.4a6 6 0 0 1-7.8 7.8L6.5 20.4a2.1 2.1 0 0 1-3-3l6.7-6.7a6 6 0 0 1 7.8-7.8l-3.3 3.4Z"/>',
+    gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a8 8 0 0 0 0-6l1.9-1.5-2-3.4-2.3.9a8 8 0 0 0-2.6-1.5L14 1h-4l-.4 2.5a8 8 0 0 0-2.6 1.5l-2.3-.9-2 3.4L4.6 9a8 8 0 0 0 0 6l-1.9 1.5 2 3.4 2.3-.9a8 8 0 0 0 2.6 1.5L10 23h4l.4-2.5a8 8 0 0 0 2.6-1.5l2.3.9 2-3.4L19.4 15Z"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.3 2"/>',
+    check: '<path d="M4 12l5 5L20 6"/>',
+    chevronLeft: '<path d="M15 5l-7 7 7 7"/>',
+    pencil: '<path d="M4 20l4-1 11-11-3-3L5 16l-1 4Z"/>',
+    trash: '<path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M7 7l1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13"/>',
+    bell: '<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+    plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+    minus: '<line x1="5" y1="12" x2="19" y2="12"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    moonToggle: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/>'
+  };
+  function icon(name, size) {
+    size = size || 16;
+    return '<svg class="i" style="width:' + size + 'px;height:' + size + 'px" viewBox="0 0 24 24">' + ICONS[name] + '</svg>';
+  }
+
+  /* ---------------- data & derived status ---------------- */
+  var INITIAL_CARS = [
+    { id: 'c1', brand: 'Kia Rio', mileageKm: 84300, vin: 'XWEPC811BB0012345', tasks: [
+      { id: 't1', name: 'Замена масла и фильтра', icon: 'droplet', intervalKm: 10000, lastKm: 78000, reminderKm: 1500, intervalMonths: 12, lastDate: '2026-01-15' },
+      { id: 't2', name: 'Тормозные колодки (передние)', icon: 'disc', intervalKm: 30000, lastKm: 60000, reminderKm: 3000 },
+      { id: 't3', name: 'Воздушный фильтр', icon: 'filter', intervalKm: 15000, lastKm: 70000, reminderKm: 2000 },
+      { id: 't4', name: 'Ремень ГРМ', icon: 'wrench', intervalKm: 60000, lastKm: 30000, reminderKm: 5000 }
+    ], history: [
+      { id: 'h1', taskName: 'Тормозные колодки (передние)', date: '2025-01-10', mileageKm: 50000, costRub: 850, service: 'Kia Центр' },
+      { id: 'h2', taskName: 'Тормозные колодки (передние)', date: '2025-06-02', mileageKm: 60000, costRub: 5200, service: 'Kia Центр' },
+      { id: 'h3', taskName: 'Воздушный фильтр', date: '2025-09-10', mileageKm: 70000, costRub: 900, service: 'АвтоСервис Юг' },
+      { id: 'h4', taskName: 'Замена масла и фильтра', date: '2026-01-15', mileageKm: 78000, costRub: 2400, service: 'АвтоСервис Юг' }
+    ]},
+    { id: 'c2', brand: 'Toyota Camry', mileageKm: 152000, vin: 'JT2BF22K1W0123456', tasks: [
+      { id: 't5', name: 'Свечи зажигания', icon: 'wrench', intervalKm: 40000, lastKm: 110000, reminderKm: 2000 },
+      { id: 't6', name: 'Замена масла и фильтра', icon: 'droplet', intervalKm: 10000, lastKm: 143000, reminderKm: 1000, intervalMonths: 12, lastDate: '2025-11-20' },
+      { id: 't7', name: 'Салонный фильтр', icon: 'filter', intervalKm: 20000, lastKm: 135000, reminderKm: 2000 }
+    ], history: [
+      { id: 'h5', taskName: 'Тормозная жидкость', date: '2024-11-01', mileageKm: 95000, costRub: 1800, service: 'Toyota Центр' },
+      { id: 'h6', taskName: 'Свечи зажигания', date: '2025-02-14', mileageKm: 110000, costRub: 3600, service: 'Toyota Центр' },
+      { id: 'h7', taskName: 'Салонный фильтр', date: '2025-08-30', mileageKm: 135000, costRub: 1200, service: 'АвтоДок' },
+      { id: 'h8', taskName: 'Замена масла и фильтра', date: '2025-11-20', mileageKm: 143000, costRub: 2600, service: 'АвтоДок' }
+    ]},
+    { id: 'c3', brand: 'Hyundai Solaris', mileageKm: 23100, vin: 'Z94K241CBHR123456', tasks: [
+      { id: 't8', name: 'Замена масла и фильтра', icon: 'droplet', intervalKm: 10000, lastKm: 20000, reminderKm: 1500, intervalMonths: 12, lastDate: '2026-06-01' },
+      { id: 't9', name: 'Тормозная жидкость', icon: 'disc', intervalKm: 40000, lastKm: 0, reminderKm: 3000 }
+    ], history: [
+      { id: 'h9', taskName: 'Замена масла и фильтра', date: '2026-06-01', mileageKm: 20000, costRub: 2100, service: 'Hyundai Центр' }
+    ]}
+  ];
+  function cloneCars() { return JSON.parse(JSON.stringify(INITIAL_CARS)); }
+
+  function monthsBetween(fromISO, toISO) {
+    var f = fromISO.split('-').map(Number), t = toISO.split('-').map(Number);
+    var months = (t[0] - f[0]) * 12 + (t[1] - f[1]);
+    if (t[2] < f[2]) months -= 1;
+    return Math.max(0, months);
+  }
+  function formatDateRu(iso) { var p = iso.split('-'); return p[2] + '.' + p[1] + '.' + p[0]; }
+  function isoFromRu(s) {
+    var p = (s || '').split('.');
+    if (p.length !== 3) return undefined;
+    return p[2] + '-' + ('0' + p[1]).slice(-2) + '-' + ('0' + p[0]).slice(-2);
+  }
+  function fmtMonths(n) { return Math.round(n) + ' мес'; }
+  function worseStatus(a, b) { var rank = { ok: 0, soon: 1, due: 2 }; return rank[a] >= rank[b] ? a : b; }
+  function pickIcon(name) {
+    var s = (name || '').toLowerCase();
+    if (s.indexOf('масл') !== -1) return 'droplet';
+    if (s.indexOf('колод') !== -1 || s.indexOf('тормоз') !== -1) return 'disc';
+    if (s.indexOf('фильтр') !== -1) return 'filter';
+    return 'wrench';
+  }
+
+  function taskStat(car, t) {
+    var dueAt = t.lastKm + t.intervalKm;
+    var remaining = dueAt - car.mileageKm;
+    var kmStatus = remaining <= 0 ? 'due' : (remaining <= t.reminderKm ? 'soon' : 'ok');
+    var frac = t.intervalKm > 0 ? (car.mileageKm - t.lastKm) / t.intervalKm : 0;
+    frac = Math.max(0, Math.min(1, frac));
+    var status = kmStatus;
+    var remainingMonths = null;
+    if (t.intervalMonths && t.lastDate) {
+      var reminderMonths = Math.max(1, Math.round(t.intervalMonths * (t.reminderKm / t.intervalKm)));
+      var monthsSince = monthsBetween(t.lastDate, TODAY);
+      remainingMonths = t.intervalMonths - monthsSince;
+      var timeStatus = remainingMonths <= 0 ? 'due' : (remainingMonths <= reminderMonths ? 'soon' : 'ok');
+      status = worseStatus(kmStatus, timeStatus);
+    }
+    return { dueAt: dueAt, remaining: remaining, remainingMonths: remainingMonths, status: status, frac: frac };
+  }
+  function tierVar(status) { return status === 'due' ? 'var(--tier-due)' : status === 'soon' ? 'var(--tier-soon)' : 'var(--tier-ok)'; }
+  function tierLabel(status) { return status === 'due' ? 'Просрочено' : status === 'soon' ? 'Скоро' : 'В порядке'; }
+  function statusRank(status) { return status === 'due' ? 0 : status === 'soon' ? 1 : 2; }
+  function sortedTaskStats(car) {
+    return car.tasks.map(function (t) { return { t: t, st: taskStat(car, t) }; }).sort(function (a, b) {
+      var r = statusRank(a.st.status) - statusRank(b.st.status);
+      return r !== 0 ? r : a.st.remaining - b.st.remaining;
+    });
+  }
+  function fmtKm(n) { return Math.round(n).toLocaleString('ru-RU') + ' км'; }
+  function taskMetaText(st) {
+    var text = st.remaining <= 0 ? ('просрочено на ' + fmtKm(-st.remaining)) : ('осталось ' + fmtKm(st.remaining));
+    if (st.remainingMonths !== null) {
+      text += ' · ' + (st.remainingMonths <= 0 ? 'время истекло' : ('или ' + fmtMonths(st.remainingMonths)));
+    }
+    return text;
+  }
+  function carAlerts(car) {
+    var soon = 0, due = 0;
+    car.tasks.forEach(function (t) { var s = taskStat(car, t).status; if (s === 'soon') soon++; if (s === 'due') due++; });
+    return { soon: soon, due: due, total: soon + due, count: car.tasks.length };
+  }
+  function worstStatus(alerts) { return alerts.due > 0 ? 'due' : (alerts.soon > 0 ? 'soon' : 'ok'); }
+
+  function gaugeHtml(car) {
+    var a = carAlerts(car);
+    var status = worstStatus(a);
+    var color = tierVar(status);
+    var pct = a.count > 0 ? Math.round(a.total / a.count * 100) : 0;
+    if (a.total === 0) pct = 6; // тонкое кольцо-«всё ок», не пустое
+    return '<div class="gauge" style="background:conic-gradient(' + color + ' ' + pct + '%, var(--surface-3) 0)">' +
+      '<div class="gauge-inner" style="color:' + color + '">' + a.total + '</div></div>';
+  }
+
+  /* ---------------- screen: cars list ---------------- */
+  function carsScreenHtml(cars, opts) {
+    opts = opts || {};
+    var rows = cars.map(function (car) {
+      var rowAttr = opts.interactive ? ' data-open-car="' + car.id + '"' : '';
+      return '<div class="car-card"' + rowAttr + '>' +
+        '<div class="car-icon">' + icon('car', 19) + '</div>' +
+        '<div class="car-main"><div class="car-name">' + car.brand + '</div><div class="car-mileage">' + fmtKm(car.mileageKm) + '</div></div>' +
+        gaugeHtml(car) +
+        '</div>';
+    }).join('');
+    var fab = '<button class="fab"' + (opts.interactive ? ' data-open-new' : '') + '>' + icon('plus', 21) + '</button>';
+    var tabbar = opts.interactive
+      ? '<nav class="tabbar"><button class="active" data-tab="cars">Авто</button><button data-tab="settings">Настройки</button></nav>'
+      : '<nav class="tabbar"><button class="active">Авто</button><button>Настройки</button></nav>';
+    return '<div class="view" data-view="cars">' +
+      '<div class="s-topbar"><span></span><span></span></div>' +
+      '<div class="s-title">Мои авто</div>' +
+      '<div class="s-sub">' + cars.length + ' автомобиля · в кружке — число скорых работ</div>' +
+      '<div class="car-list">' + rows + '</div>' + fab + tabbar +
+      '</div>';
+  }
+
+  /* ---------------- screen: car detail ---------------- */
+  function detailScreenHtml(car, opts) {
+    opts = opts || {};
+    var a = carAlerts(car);
+    var rows = sortedTaskStats(car).map(function (x) {
+      var t = x.t, st = x.st;
+      var color = tierVar(st.status);
+      var doneAttr = opts.interactive ? ' data-mark-done="' + t.id + '"' : '';
+      return '<div class="task-row">' +
+        '<div class="task-top"><div class="task-icon">' + icon(t.icon, 16) + '</div>' +
+        '<div class="task-main"><div class="task-name">' + t.name + '</div><div class="task-meta">' + taskMetaText(st) + ' · каждые ' + fmtKm(t.intervalKm) + '</div></div>' +
+        '<span class="task-status-chip" style="background:' + color + ';color:var(--on-tier)">' + tierLabel(st.status) + '</span></div>' +
+        '<div class="task-track"><div class="task-fill" style="width:' + Math.round(st.frac * 100) + '%;background:' + color + '"></div></div>' +
+        '<div class="task-actions"><button class="mark-done-btn"' + doneAttr + '>' + icon('check', 12) + ' Отметить выполненной</button></div>' +
+        '</div>';
+    }).join('');
+    var backAttr = opts.interactive ? ' data-back="cars"' : '';
+    var histAttr = opts.interactive ? ' data-open-history' : '';
+    var mileageBlock;
+    if (opts.interactive && opts.editingMileage) {
+      mileageBlock = '<div class="stat-edit-row"><input type="number" id="mileageEditInput" value="' + car.mileageKm + '">' +
+        '<button id="saveMileageBtn">' + icon('check', 14) + '</button></div>';
+    } else {
+      var editAttr = opts.interactive ? ' data-edit-mileage' : '';
+      mileageBlock = '<div class="stat-num-row"><div class="stat-num">' + icon('gauge', 16) + '<span>' + car.mileageKm.toLocaleString('ru-RU') + '</span></div>' +
+        '<button class="mileage-edit-btn"' + editAttr + '>' + icon('pencil', 11) + '</button></div>';
+    }
+    return '<div class="view" data-view="detail">' +
+      '<div class="s-topbar"><button class="icon-btn"' + backAttr + '>' + icon('chevronLeft', 16) + '</button>' +
+      '<div class="icon-row"><button class="icon-btn"' + histAttr + '>' + icon('clock', 16) + '</button><button class="icon-btn">' + icon('pencil', 16) + '</button><button class="icon-btn">' + icon('trash', 16) + '</button></div></div>' +
+      '<div class="detail-title">' + car.brand + '</div>' +
+      '<div class="detail-vin">VIN ' + car.vin + '</div>' +
+      '<div class="stat-pair">' +
+      '<div class="stat-block"><div class="stat-label">Пробег</div>' + mileageBlock + '</div>' +
+      '<div class="stat-block"><div class="stat-label">Скоро / просрочено</div><div class="stat-num" style="color:' + tierVar(worstStatus(a)) + '"><span>' + a.total + ' из ' + a.count + '</span></div></div>' +
+      '</div>' +
+      '<div class="task-list">' + rows + '</div>' +
+      '</div>';
+  }
+
+  /* ---------------- screen: history ---------------- */
+  function historyScreenHtml(car, opts) {
+    opts = opts || {};
+    var entries = (car.history || []).slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+    var rows = entries.length ? entries.map(function (e) {
+      return '<div class="history-row"><div class="history-top"><span class="history-name">' + e.taskName + '</span><span class="history-date">' + formatDateRu(e.date) + '</span></div>' +
+        '<div class="history-meta"><span>' + fmtKm(e.mileageKm) + '</span>' +
+        (e.costRub ? '<span>' + e.costRub.toLocaleString('ru-RU') + ' ₽</span>' : '') +
+        (e.service ? '<span>' + e.service + '</span>' : '') + '</div></div>';
+    }).join('') : '<div class="history-empty">Пока нет записей — отметьте работу выполненной на экране авто, и она появится здесь</div>';
+    var backAttr = opts.interactive ? ' data-back="detail"' : '';
+    return '<div class="view" data-view="history">' +
+      '<div class="s-topbar"><button class="icon-btn"' + backAttr + '>' + icon('chevronLeft', 16) + '</button><span></span></div>' +
+      '<div class="detail-title">История ТО</div>' +
+      '<div class="detail-vin">' + car.brand + '</div>' +
+      '<div class="history-list">' + rows + '</div>' +
+      '</div>';
+  }
+
+  /* ---------------- screen: add car ---------------- */
+  function presetChipsHtml(opts) {
+    var presets = [
+      { key: 'oil', label: 'Масло' }, { key: 'pads', label: 'Колодки' },
+      { key: 'filter', label: 'Воздушный фильтр' }, { key: 'belt', label: 'Ремень ГРМ' }
+    ];
+    return '<div class="preset-chips">' + presets.map(function (p) {
+      var attr = opts.interactive ? ' data-preset="' + p.key + '"' : '';
+      return '<button class="preset-chip"' + attr + '>+ ' + p.label + '</button>';
+    }).join('') + '</div>';
+  }
+  var PRESET_DEFS = {
+    oil: { name: 'Замена масла и фильтра', intervalKm: 10000, reminderKm: 1500 },
+    pads: { name: 'Тормозные колодки', intervalKm: 30000, reminderKm: 3000 },
+    filter: { name: 'Воздушный фильтр', intervalKm: 15000, reminderKm: 2000 },
+    belt: { name: 'Ремень ГРМ', intervalKm: 60000, reminderKm: 5000 }
+  };
+
+  function taskBlockHtml(block, opts) {
+    block = block || {};
+    var n = block.n;
+    if (!opts.interactive) {
+      return '<div class="task-block">' +
+        '<div class="task-block-head"><span class="task-block-title">Работа ' + n + '</span><button class="icon-btn">' + icon('trash', 14) + '</button></div>' +
+        '<div class="text-input static">' + (block.name || 'Замена масла и фильтра') + '</div>' +
+        '<div class="mini-row">' +
+        '<div><span class="mini-label">Интервал замены, км</span><div class="num-input static">' + (block.intervalKm || '10 000') + '</div></div>' +
+        '<div><span class="mini-label">Интервал по времени, мес (опц.)</span><div class="num-input static">' + (block.intervalMonths || '12') + '</div></div>' +
+        '</div>' +
+        '<div class="mini-row">' +
+        '<div><span class="mini-label">Последний раз, км</span><div class="num-input static">' + (block.lastKm || '78 000') + '</div></div>' +
+        '<div><span class="mini-label">Дата последней замены (опц.)</span><div class="text-input static">' + (block.lastDate || '15.01.2026') + '</div></div>' +
+        '</div>' +
+        '<span class="mini-label">Напоминать за N тыс. км до срока</span><div class="num-input static">' + (block.reminderKm || '1 500') + '</div>' +
+        '</div>';
+    }
+    return '<div class="task-block" data-block="' + n + '">' +
+      '<div class="task-block-head"><span class="task-block-title">Работа ' + n + '</span><button class="icon-btn" data-remove-block="' + n + '">' + icon('trash', 14) + '</button></div>' +
+      '<input class="text-input" placeholder="Например, Замена масла и фильтра" value="' + (block.name || '') + '">' +
+      '<div class="mini-row">' +
+      '<div><span class="mini-label">Интервал замены, км</span><input class="num-input" type="number" placeholder="10000" value="' + (block.intervalKm || '') + '"></div>' +
+      '<div><span class="mini-label">Интервал по времени, мес (опц.)</span><input class="num-input" type="number" placeholder="12" value=""></div>' +
+      '</div>' +
+      '<div class="mini-row">' +
+      '<div><span class="mini-label">Последний раз, км</span><input class="num-input" type="number" placeholder="не проводилась" value=""></div>' +
+      '<div><span class="mini-label">Дата последней замены (опц.)</span><input class="text-input" placeholder="дд.мм.гггг" value=""></div>' +
+      '</div>' +
+      '<span class="mini-label">Напоминать за N тыс. км до срока</span><input class="num-input" type="number" placeholder="1500" value="' + (block.reminderKm || '') + '">' +
+      '</div>';
+  }
+
+  function newScreenHtml(opts, blocks) {
+    opts = opts || {};
+    blocks = blocks || [{ n: 1 }];
+    var backAttr = opts.interactive ? ' data-back="cars"' : '';
+    var countLabel = blocks.length + (blocks.length === 1 ? ' добавлена' : ' добавлено');
+    var blocksHtml = blocks.map(function (b) { return taskBlockHtml(b, opts); }).join('');
+    var idWrap = opts.interactive ? ' id="taskBlocks"' : '';
+    var addBtn = opts.interactive
+      ? '<button class="add-task-btn" id="addTaskBtn">' + icon('plus', 14) + ' Добавить произвольную работу</button>'
+      : '<div class="add-task-btn">' + icon('plus', 14) + ' Добавить произвольную работу</div>';
+    var brandField = opts.interactive ? '<input class="text-input" id="newBrand" placeholder="Например, Kia Rio">' : '<div class="text-input static">Kia Rio</div>';
+    var mileageField = opts.interactive ? '<input class="num-input" id="newMileage" type="number" placeholder="84300">' : '<div class="num-input static">84 300</div>';
+    var vinField = opts.interactive ? '<input class="text-input" id="newVin" placeholder="17 символов">' : '<div class="text-input static">XWEPC811BB0012345</div>';
+    var saveBtn = opts.interactive ? '<button class="save-btn" id="saveCarBtn">Сохранить авто</button>' : '<div class="save-btn">Сохранить авто</div>';
+    return '<div class="view" data-view="new">' +
+      '<div class="s-topbar"><button class="icon-btn"' + backAttr + '>' + icon('chevronLeft', 16) + '</button></div>' +
+      '<div class="s-title">Добавление авто</div>' +
+      '<div class="form-body">' +
+      '<span class="field-label">Марка<span class="req"> *</span></span>' + brandField +
+      '<div class="row-2">' +
+      '<div><span class="field-label" style="padding:0 0 8px">Пробег, км<span class="req"> *</span></span>' + mileageField + '</div>' +
+      '<div><span class="field-label" style="padding:0 0 8px">VIN-номер</span>' + vinField + '</div>' +
+      '</div>' +
+      '<div class="section-divider"><span class="st">Регламентные работы</span><span class="sc">' + countLabel + '</span></div>' +
+      '<div style="height:10px"></div>' +
+      presetChipsHtml(opts) +
+      '<div' + idWrap + '>' + blocksHtml + '</div>' +
+      addBtn +
+      '</div>' + saveBtn +
+      '</div>';
+  }
+
+  /* ---------------- screen: settings ---------------- */
+  function settingsScreenHtml(state, opts) {
+    opts = opts || {};
+    var themeOpts = ['Светлая', 'Тёмная', 'Системная'];
+    var unitOpts = ['Километры', 'Мили'];
+    function seg(name, options, activeIdx) {
+      return '<div class="segmented">' + options.map(function (o, i) {
+        var attr = opts.interactive ? ' data-seg="' + name + '" data-idx="' + i + '"' : '';
+        return '<button class="' + (i === activeIdx ? 'active' : '') + '"' + attr + '>' + o + '</button>';
+      }).join('') + '</div>';
+    }
+    var tabbar = opts.interactive
+      ? '<nav class="tabbar"><button data-tab="cars">Авто</button><button class="active" data-tab="settings">Настройки</button></nav>'
+      : '<nav class="tabbar"><button>Авто</button><button class="active">Настройки</button></nav>';
+    var pushAttr = opts.interactive ? ' id="pushSwitch"' : '';
+    var decAttr = opts.interactive ? ' data-step="-1"' : '';
+    var incAttr = opts.interactive ? ' data-step="1"' : '';
+    return '<div class="view" data-view="settings">' +
+      '<div class="s-topbar"><span></span><span></span></div>' +
+      '<div class="s-title">Настройки</div>' +
+      '<div class="form-body">' +
+      '<div class="settings-group"><div class="settings-group-title">Тема</div>' + seg('theme', themeOpts, state.themeIdx) + '</div>' +
+      '<div class="settings-group"><div class="settings-group-title">Единицы измерения</div>' + seg('units', unitOpts, state.unitsIdx) + '</div>' +
+      '<div class="settings-group">' +
+      '<div class="settings-group-title">Уведомления</div>' +
+      '<div class="setting-row"><button class="icon-btn">' + icon('bell', 16) + '</button>' +
+      '<div class="setting-text"><div class="t1">Push-уведомления</div><div class="t2">О скорых и просроченных работах</div></div>' +
+      '<button class="switch' + (state.pushOn ? ' on' : '') + '"' + pushAttr + '></button></div>' +
+      '<div class="notif-preview"><div class="notif-icon">' + icon('bell', 14) + '</div>' +
+      '<div class="notif-body"><div class="notif-head"><span class="notif-title">Одометр</span><span class="notif-time">сейчас</span></div>' +
+      '<div class="notif-text">Kia Rio: пора заменить воздушный фильтр — осталось 700 км</div>' +
+      '<div class="notif-caption">Повторно напомним не раньше чем через 3 дня — чтобы не спамить одной и той же работой</div></div></div>' +
+      '<div class="setting-row"><button class="icon-btn">' + icon('gauge', 16) + '</button>' +
+      '<div class="setting-text"><div class="t1">Напоминать заранее</div><div class="t2">тыс. км до срока по умолчанию</div></div>' +
+      '<div class="stepper"><button' + decAttr + '>' + icon('minus', 12) + '</button><span class="val">' + state.reminderDefault + '</span><button' + incAttr + '>' + icon('plus', 12) + '</button></div></div>' +
+      '<div class="setting-row"><button class="icon-btn">' + icon('gear', 16) + '</button>' +
+      '<div class="setting-text"><div class="t1">Время напоминаний</div><div class="t2">Ежедневная проверка пробега</div></div>' +
+      '<span style="font-family:var(--mono);font-size:12px;color:var(--ink-muted)">' + state.reminderTime + '</span></div>' +
+      '</div>' +
+      '</div>' + tabbar +
+      '</div>';
+  }
+
+  function phoneWrap(index, name, innerHtml) {
+    return '<figure><figcaption><span class="screen-index">' + index + '</span><span class="screen-name">' + name + '</span></figcaption>' +
+      '<div class="phone"><div class="notch"></div><div class="screen">' + innerHtml + '</div></div></figure>';
+  }
+
+  function renderStaticGallery(containerId) {
+    var cars = cloneCars();
+    var settingsState = { themeIdx: containerId === 'galleryDark' ? 1 : 0, unitsIdx: 0, pushOn: true, reminderDefault: 2, reminderTime: '09:00' };
+    document.getElementById(containerId).innerHTML =
+      phoneWrap('01', 'Мои авто', carsScreenHtml(cars, { interactive: false })) +
+      phoneWrap('02', 'Добавление авто', newScreenHtml({ interactive: false }, [{ n: 1 }])) +
+      phoneWrap('03', 'Регламентные работы', detailScreenHtml(cars[0], { interactive: false })) +
+      phoneWrap('04', 'История ТО', historyScreenHtml(cars[0], { interactive: false })) +
+      phoneWrap('05', 'Настройки', settingsScreenHtml(settingsState, { interactive: false }));
+  }
+  renderStaticGallery('galleryLight');
+  renderStaticGallery('galleryDark');
+
+  /* ================= interactive copy ================= */
+  var cars = cloneCars();
+  var istate = {
+    screen: 'cars', detailId: null, editingMileage: false,
+    taskBlocks: [{ n: 1 }], nextBlockN: 2,
+    settings: { themeIdx: 0, unitsIdx: 0, pushOn: true, reminderDefault: 2, reminderTime: '09:00' }
+  };
+  function carById(id) { return cars.find(function (c) { return c.id === id; }); }
+  function currentDetailCar() { return carById(istate.detailId) || cars[0]; }
+
+  var routeNames = { cars: 'Мои авто', detail: 'Регламентные работы', history: 'История ТО', new: 'Добавление авто', settings: 'Настройки' };
+  function paintInteractive() {
+    var root = document.getElementById('interactiveScreen');
+    root.innerHTML =
+      carsScreenHtml(cars, { interactive: true }) +
+      detailScreenHtml(currentDetailCar(), { interactive: true, editingMileage: istate.editingMileage }) +
+      historyScreenHtml(currentDetailCar(), { interactive: true }) +
+      newScreenHtml({ interactive: true }, istate.taskBlocks) +
+      settingsScreenHtml(istate.settings, { interactive: true });
+    root.parentElement.classList.add('interactive');
+    wireInteractive();
+    document.querySelectorAll('#interactiveScreen .view').forEach(function (v) {
+      v.classList.toggle('active', v.getAttribute('data-view') === istate.screen);
+    });
+    document.getElementById('routeLabel').textContent = routeNames[istate.screen];
+  }
+
+  function wireInteractive() {
+    var root = document.getElementById('interactiveScreen');
+
+    root.querySelectorAll('[data-open-car]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        istate.detailId = row.getAttribute('data-open-car'); istate.editingMileage = false; istate.screen = 'detail'; paintInteractive();
+      });
+    });
+    root.querySelectorAll('[data-open-new]').forEach(function (b) {
+      b.addEventListener('click', function () { istate.taskBlocks = [{ n: 1 }]; istate.nextBlockN = 2; istate.screen = 'new'; paintInteractive(); });
+    });
+    root.querySelectorAll('[data-back]').forEach(function (b) {
+      b.addEventListener('click', function () { istate.screen = b.getAttribute('data-back'); paintInteractive(); });
+    });
+    root.querySelectorAll('.tabbar button[data-tab]').forEach(function (b) {
+      b.addEventListener('click', function () { istate.screen = b.getAttribute('data-tab'); paintInteractive(); });
+    });
+    var openHistoryBtn = root.querySelector('[data-open-history]');
+    if (openHistoryBtn) openHistoryBtn.addEventListener('click', function () { istate.screen = 'history'; paintInteractive(); });
+
+    /* --- quick mileage edit --- */
+    var editMileageBtn = root.querySelector('[data-edit-mileage]');
+    if (editMileageBtn) editMileageBtn.addEventListener('click', function () { istate.editingMileage = true; paintInteractive(); });
+    var saveMileageBtn = root.querySelector('#saveMileageBtn');
+    if (saveMileageBtn) saveMileageBtn.addEventListener('click', function () {
+      var val = parseInt(root.querySelector('#mileageEditInput').value, 10);
+      if (val) currentDetailCar().mileageKm = val;
+      istate.editingMileage = false; paintInteractive();
+    });
+
+    /* --- mark task done --- */
+    root.querySelectorAll('[data-mark-done]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var car = currentDetailCar();
+        var task = car.tasks.find(function (t) { return t.id === b.getAttribute('data-mark-done'); });
+        if (!task) return;
+        task.lastKm = car.mileageKm;
+        if (task.intervalMonths) task.lastDate = TODAY;
+        car.history = car.history || [];
+        car.history.push({ id: 'h' + Date.now(), taskName: task.name, date: TODAY, mileageKm: car.mileageKm, costRub: null, service: null });
+        paintInteractive();
+      });
+    });
+
+    /* --- add-car form: presets & custom blocks --- */
+    var addTaskBtn = root.querySelector('#addTaskBtn');
+    if (addTaskBtn) addTaskBtn.addEventListener('click', function () { istate.taskBlocks.push({ n: istate.nextBlockN++ }); paintInteractive(); });
+    root.querySelectorAll('[data-preset]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var def = PRESET_DEFS[b.getAttribute('data-preset')];
+        istate.taskBlocks.push({ n: istate.nextBlockN++, name: def.name, intervalKm: def.intervalKm, reminderKm: def.reminderKm });
+        paintInteractive();
+      });
+    });
+    root.querySelectorAll('[data-remove-block]').forEach(function (b) {
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var n = +b.getAttribute('data-remove-block');
+        istate.taskBlocks = istate.taskBlocks.filter(function (x) { return x.n !== n; });
+        if (istate.taskBlocks.length === 0) istate.taskBlocks = [{ n: istate.nextBlockN++ }];
+        paintInteractive();
+      });
+    });
+    var saveBtn = root.querySelector('#saveCarBtn');
+    if (saveBtn) saveBtn.addEventListener('click', function () {
+      var brand = root.querySelector('#newBrand').value.trim();
+      var mileage = parseInt(root.querySelector('#newMileage').value, 10);
+      if (!brand || !mileage) return;
+      var vin = root.querySelector('#newVin').value.trim() || '—';
+      var tasks = [];
+      root.querySelectorAll('#taskBlocks .task-block').forEach(function (el) {
+        var inputs = el.querySelectorAll('input');
+        var name = inputs[0].value.trim();
+        var intervalKm = parseInt(inputs[1].value, 10);
+        if (!name || !intervalKm) return;
+        var intervalMonths = inputs[2].value ? parseInt(inputs[2].value, 10) : undefined;
+        var lastKm = inputs[3].value ? parseInt(inputs[3].value, 10) : 0;
+        var lastDateIso = intervalMonths ? isoFromRu(inputs[4].value) : undefined;
+        var reminderKm = inputs[5].value ? parseInt(inputs[5].value, 10) : Math.round(intervalKm * 0.15);
+        tasks.push({ id: 'nt' + tasks.length + Date.now(), name: name, icon: pickIcon(name), intervalKm: intervalKm, lastKm: lastKm, reminderKm: reminderKm, intervalMonths: intervalMonths, lastDate: lastDateIso });
+      });
+      if (tasks.length === 0) tasks.push({ id: 'nt0' + Date.now(), name: 'Замена масла и фильтра', icon: 'droplet', intervalKm: 10000, lastKm: mileage, reminderKm: 1500 });
+      cars.push({ id: 'c' + Date.now(), brand: brand, mileageKm: mileage, vin: vin, tasks: tasks, history: [] });
+      istate.screen = 'cars'; paintInteractive();
+    });
+
+    /* --- settings --- */
+    root.querySelectorAll('[data-seg]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var name = b.getAttribute('data-seg'), idx = +b.getAttribute('data-idx');
+        if (name === 'theme') {
+          istate.settings.themeIdx = idx;
+          var map = ['light', 'dark', null];
+          if (map[idx]) { document.documentElement.setAttribute('data-theme', map[idx]); try { localStorage.setItem('odometer-theme', map[idx]); } catch (e) {} }
+          else { document.documentElement.removeAttribute('data-theme'); try { localStorage.removeItem('odometer-theme'); } catch (e) {} }
+          paintThemeBtn();
+        } else {
+          istate.settings.unitsIdx = idx;
+        }
+        paintInteractive();
+      });
+    });
+    var pushSwitch = root.querySelector('#pushSwitch');
+    if (pushSwitch) pushSwitch.addEventListener('click', function () { istate.settings.pushOn = !istate.settings.pushOn; paintInteractive(); });
+    root.querySelectorAll('[data-step]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var d = +b.getAttribute('data-step');
+        istate.settings.reminderDefault = Math.max(1, Math.min(9, istate.settings.reminderDefault + d));
+        paintInteractive();
+      });
+    });
+  }
+  paintInteractive();
+
+  /* ================= theme toggle ================= */
+  function effectiveTheme() {
+    return document.documentElement.getAttribute('data-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  }
+  function paintThemeBtn() {
+    document.getElementById('themeBtn').innerHTML = icon(effectiveTheme() === 'dark' ? 'sun' : 'moonToggle', 18);
+  }
+  document.getElementById('themeBtn').addEventListener('click', function () {
+    var next = effectiveTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    istate.settings.themeIdx = next === 'dark' ? 1 : 0;
+    try { localStorage.setItem('odometer-theme', next); } catch (e) {}
+    paintThemeBtn();
+    paintInteractive();
+  });
+  try { var saved = localStorage.getItem('odometer-theme'); if (saved) document.documentElement.setAttribute('data-theme', saved); } catch (e) {}
+  paintThemeBtn();
+
+  /* ================= style-guide icon slots ================= */
+  document.querySelectorAll('.icon-slot').forEach(function (el) {
+    el.innerHTML = icon(el.getAttribute('data-icon'), +el.getAttribute('data-size') || 16);
+  });
+})();
+</script>
+</body>
+</html>
