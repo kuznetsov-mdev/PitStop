@@ -33,7 +33,7 @@ ru.kuznetsov.pitstop/
 │   ├── local/          # SQLDelight driver (expect/actual), .sq-схемы
 │   ├── repository/     # Fake*RepositoryImpl (этап 5) → *RepositoryImpl на SQLDelight (этап 7)
 │   └── mapper/         # маппинг SQLDelight-строк ↔ domain-модели
-├── di/                # Koin-модули: uiModule, domainModule, dataModule
+├── di/                # Koin: FeatureModule.kt, DomainModule.kt, DataModule.kt (по модулю на файл) + Koin.kt (initKoin)
 └── features/
     ├── navigation/      # Destinations, NavGraph
     ├── cars/            # экран "Мои авто"
@@ -104,9 +104,9 @@ ViewModel-ы — `StateFlow<UiState>`, экран подписывается ч�
 *Почему именно сейчас: экраны на следующем этапе сразу пишутся с переходами между собой, retrofit-навигацию потом не делаем.*
 
 ### Этап 4 — DI (Koin)
-- ⬜ Подключить `io.insert-koin:koin-bom:4.2.2` + `koin-core`, `koin-compose`, `koin-compose-viewmodel` — alias'ы в каталог, зависимости в `commonMain.dependencies`.
-- ⬜ `di/` — `uiModule`/`domainModule`/`dataModule`, функция `initKoin()`, вызываемая из `Application` (Android) и перед `MainViewController()` (iOS).
-- ⬜ Зарегистрировать в `dataModule` **фейковые** реализации репозиториев (см. этап 5) — реальные появятся на этапе 7 без изменений в `di`-API, только подменой binding'а.
+- ✅ Подключить `io.insert-koin:koin-bom:4.2.2` + `koin-core`, `koin-compose`, `koin-compose-viewmodel` — alias'ы в каталог, зависимости в `commonMain.dependencies`. Проверено на Android (`:androidApp:assembleDebug`) и iOS (`:shared:compileKotlinIosSimulatorArm64`).
+- ✅ `di/` — `featureModule` (все зависимости для UI)/`domainModule`/`dataModule`, каждый в своём файле (`FeatureModule.kt`, `DomainModule.kt`, `DataModule.kt`), и `initKoin()` в `Koin.kt`. *Модули пока пустые. `initKoin()` вызывается из `PitStopApplication.onCreate()` (Android, класс зарегистрирован в манифесте) и из `iOSApp.init()` (iOS; в Swift функция называется `KoinKt.doInitKoin()`). Проверено запуском на Android-устройстве и в iOS-симуляторе.*
+- ⬜ Зарегистрировать в `dataModule` **фейковые** реализации репозиториев (см. этап 5) — реальные появятся на этапе 7 без изменений в `di`-API, только подменой binding'а. *Выполняется вместе с этапом 5: до него нет ни интерфейсов репозиториев, ни фейков.*
 
 *Почему именно сейчас: экраны (этап 6) с первого дня инжектят `ViewModel` через `koinViewModel()`, как подтверждено пользователем.*
 
