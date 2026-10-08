@@ -2,18 +2,20 @@
 
 Пакет: `ru.kuznetsov.pitstop.domain` (`shared/src/commonMain/kotlin/ru/kuznetsov/pitstop/domain/`).
 
-Domain-слой — чистый Kotlin без зависимостей от UI и хранилища. Из библиотек использует только `kotlinx-datetime` (`LocalDate`) и, для репозиториев, `kotlinx-coroutines-core` (`Flow`).
+Domain-слой — чистый Kotlin без зависимостей от UI и хранилища. Из библиотек использует только `kotlinx-datetime` (`LocalDate`, `LocalTime`) и `kotlinx-coroutines-core` (`Flow`).
 
 ```
 domain/
 ├── model/        # модели
-├── usecase/      # бизнес-логика
-└── repository/   # интерфейсы репозиториев (ещё не созданы)
+├── usecase/      # бизнес-логика; единственная точка входа для ViewModel-ов
+└── repository/   # интерфейсы репозиториев
 ```
+
+Правило слоя: ViewModel-ы работают только с use case-ами и репозиториев не видят. Use case — класс с одним методом `operator fun invoke(...)`. Все use case-ы зарегистрированы в `domainModule` (`di/DomainModule.kt`).
 
 ## Модели
 
-Моделей семь: три **хранимые** (то, что ляжет в базу) и четыре **вычисляемые** (считаются на лету и нигде не сохраняются).
+Три группы: **хранимые** (то, что ляжет в базу), **черновики** (то же без `id`, до сохранения) и **вычисляемые** (считаются на лету и нигде не сохраняются).
 
 ```
 Car ──(tasks, вложены)──▶ MaintenanceTask
@@ -24,6 +26,9 @@ ServiceHistoryEntry          TaskStat ──▶ TaskStatus
                                 │
                  TaskWithStat = MaintenanceTask + TaskStat
                  CarAlerts    = счётчики TaskStatus по всем работам машины
+                 TaskReminder = Car + TaskWithStat
+
+Settings ──▶ ThemeMode, DistanceUnit        (от машин не зависит)
 ```
 
 ### Хранимые
@@ -72,6 +77,30 @@ ServiceHistoryEntry          TaskStat ──▶ TaskStatus
 
 С работой запись не связана ссылкой: `taskName` хранится текстом, поэтому запись переживает переименование и удаление работы.
 
+#### `Settings`
+
+Настройки пользователя с экрана «Настройки».
+
+| Поле | Тип | Смысл |
+|---|---|---|
+| `themeMode` | `ThemeMode` | тема: `LIGHT`, `DARK`, `SYSTEM` (как на устройстве) |
+| `distanceUnit` | `DistanceUnit` | единицы показа: `KILOMETERS`, `MILES` |
+| `pushEnabled` | `Boolean` | включены ли push-уведомления |
+| `defaultReminderWindowKm` | `Int` | окно напоминания по умолчанию для новых работ, в км |
+| `reminderTime` | `LocalTime` | время ежедневной проверки статусов |
+
+Данные всегда хранятся в километрах; `distanceUnit` влияет только на показ.
+
+### Черновики
+
+Те же данные без `id`. Идентификатор присваивает репозиторий при сохранении.
+
+| Модель | Отличие от хранимой |
+|---|---|
+| `NewCar` | нет `id`; `tasks` — список `NewMaintenanceTask` |
+| `NewMaintenanceTask` | нет `id`; `lastDoneKm` по умолчанию 0; `reminderWindowKm` может быть `null` — «взять долю интервала по умолчанию» |
+| `NewServiceHistoryEntry` | нет `id` |
+
 ### Вычисляемые
 
 #### `TaskStatus`
@@ -106,17 +135,65 @@ ServiceHistoryEntry          TaskStat ──▶ TaskStatus
 | `total` | `Int` | вычисляемое: `soon + due` |
 | `worstStatus` | `TaskStatus` | вычисляемое: `DUE`, если есть просроченные; иначе `SOON`, если есть «скоро»; иначе `OK` |
 
+#### `TaskReminder`
+
+Работа, о которой нужно уведомить, вместе с её машиной (`car`, `task: TaskWithStat`). Используется только заготовкой `GetTaskRemindersUseCase`.
+
+## Репозитории
+
+Интерфейсы в `domain/repository/`. Чтение — `Flow`, который переизлучает данные при каждом изменении; изменение — `suspend`-методы. Реализаций пока нет.
+
+### `CarRepository`
+
+| Метод | Что делает |
+|---|---|
+| `observeCars(): Flow<List<Car>>` | все машины |
+| `observeCarById(carId): Flow<Car?>` | одна машина; `null`, если такой нет |
+| `addCar(car: NewCar): String` | сохраняет машину и её работы, присваивает им `id`, возвращает `id` машины |
+| `deleteCar(carId)` | удаляет машину вместе с работами |
+| `updateMileage(carId, mileageKm)` | меняет текущий пробег |
+| `markTaskDone(carId, taskId, date)` | ставит работе `lastDoneKm` = текущий пробег машины и, если у неё есть интервал по времени, `lastDoneDate` = `date`; в историю не пишет |
+| `updateCar(carId, brand, vin)` | меняет марку и VIN |
+| `addTask(carId, task: NewMaintenanceTask)` | добавляет работу существующей машине |
+| `updateTask(carId, task: MaintenanceTask)` | заменяет работу с тем же `id` |
+| `deleteTask(carId, taskId)` | удаляет работу |
+
+### `ServiceHistoryRepository`
+
+| Метод | Что делает |
+|---|---|
+| `observeHistory(carId): Flow<List<ServiceHistoryEntry>>` | записи журнала одной машины, без гарантии порядка |
+| `addEntry(entry: NewServiceHistoryEntry)` | добавляет запись, присваивает ей `id` |
+| `updateEntry(entry: ServiceHistoryEntry)` | заменяет запись с тем же `id` |
+| `deleteHistory(carId)` | удаляет все записи машины |
+
+### `SettingsRepository`
+
+| Метод | Что делает |
+|---|---|
+| `observeSettings(): Flow<Settings>` | текущие настройки |
+| `updateSettings(settings)` | заменяет настройки целиком |
+
 ## Use case-ы
 
-Все три — чистые функции без состояния, зарегистрированы в `domainModule` (`di/DomainModule.kt`). Сегодняшняя дата всегда передаётся параметром `today`.
+Всего 19: 13 реализованных и 6 заготовок.
+
+### Расчётные
+
+Чистые функции без состояния и без репозиториев. Сегодняшняя дата передаётся параметром `today`.
 
 | Use case | Вход | Выход |
 |---|---|---|
 | `CalculateTaskStatusUseCase` | `mileageKm`, `task`, `today` | `TaskStat` |
 | `SortedTaskStatsUseCase` | `car`, `today` | `List<TaskWithStat>` |
 | `CarAlertsUseCase` | `car`, `today` | `CarAlerts` |
+| `GetTodayUseCase` | — | `LocalDate` |
 
-### Правила расчёта статуса (`CalculateTaskStatusUseCase`)
+`SortedTaskStatsUseCase` и `CarAlertsUseCase` своих правил статуса не содержат: оба вызывают `CalculateTaskStatusUseCase` для каждой работы.
+
+`GetTodayUseCase` возвращает сегодняшнюю дату в часовом поясе устройства. Это единственное место, где domain читает системные часы.
+
+#### Правила расчёта статуса (`CalculateTaskStatusUseCase`)
 
 По пробегу:
 
@@ -133,21 +210,81 @@ ServiceHistoryEntry          TaskStat ──▶ TaskStatus
 
 Итоговый статус — худший из двух. Если срока по времени нет, `remainingMonths = null` и статус берётся по пробегу.
 
-### Сортировка (`SortedTaskStatsUseCase`)
+#### Сортировка (`SortedTaskStatsUseCase`)
 
 Сначала `DUE`, затем `SOON`, затем `OK`; внутри одного статуса — по возрастанию `remainingKm`.
 
-### Пример
+#### Пример
 
-Kia Rio, пробег 84 300 км. Работа «Замена масла и фильтра»: интервал 10 000 км / 12 мес, последний раз на 78 000 км 15.01.2026, окно напоминания 1 500 км. Сегодня 08.10.2026.
+Toyota Camry, пробег 152 000 км, сегодня 08.10.2026.
 
-- По пробегу: срок на 88 000 км, осталось 3 700 км — больше окна, `OK`. `progress = 0,63`.
-- По времени: прошло 8 полных месяцев, осталось 4. Окно — `round(12 × 1 500 / 10 000) = 2`, значит `OK`.
-- Итог: `TaskStat(dueAtKm = 88000, remainingKm = 3700, remainingMonths = 4, status = OK, progress = 0.63)`.
+| Работа | Параметры | Срок на | Осталось | Статус |
+|---|---|---|---|---|
+| Свечи зажигания | 40 000 км, последний раз на 110 000, окно 2 000 | 150 000 км | −2 000 км | `DUE` |
+| Замена масла и фильтра | 10 000 км / 12 мес, последний раз на 143 000 км 20.11.2025, окно 1 000 | 153 000 км | 1 000 км / 2 мес | `SOON` |
+| Салонный фильтр | 20 000 км, последний раз на 135 000, окно 2 000 | 155 000 км | 3 000 км | `OK` |
+
+- Масло: по пробегу остаток равен окну → `SOON`; по времени прошло 10 полных месяцев, осталось 2, окно `round(12 × 1 000 / 10 000) = 1` → `OK`; итог — худший, `SOON`.
+- `SortedTaskStatsUseCase` вернёт работы в порядке: свечи, масло, салонный фильтр.
+- `CarAlertsUseCase` вернёт `soon = 1`, `due = 1`, `taskCount = 3`; отсюда `total = 2`, `worstStatus = DUE`.
+
+### Машины
+
+| Use case | Вход | Выход | Правила |
+|---|---|---|---|
+| `ObserveCarsUseCase` | — | `Flow<List<Car>>` | проброс `CarRepository.observeCars()` |
+| `ObserveCarByIdUseCase` | `carId` | `Flow<Car?>` | проброс `observeCarById`; `null`, если машины нет (например, сразу после удаления) |
+| `AddCarUseCase` | `car: NewCar` | `String?` — `id` новой машины | см. ниже |
+| `DeleteCarUseCase` | `carId` | — | удаляет машину (`deleteCar`) и её историю (`deleteHistory`) |
+| `UpdateMileageUseCase` | `carId`, `mileageKm` | `Boolean` | `mileageKm ≤ 0` → `false`, ничего не меняется; значение меньше текущего допускается, чтобы исправить опечатку |
+| `MarkTaskDoneUseCase` | `carId`, `taskId`, `today` | `Boolean` | см. ниже |
+
+#### `AddCarUseCase`
+
+- Возвращает `null` и ничего не сохраняет, если марка пустая или пробег не положительный.
+- Марка и названия работ обрезаются по краям; пустой VIN сохраняется как `null`.
+- Работы без названия или с интервалом `≤ 0` отбрасываются.
+- Работе без окна напоминания ставится 15 % её интервала по пробегу.
+- `intervalMonths ≤ 0` считается отсутствующим; `lastDoneDate` сохраняется только у работ с интервалом по времени.
+- Работу по умолчанию use case не подставляет: если список работ пуст, машина сохраняется без работ.
+
+#### `MarkTaskDoneUseCase`
+
+- Возвращает `false` и ничего не меняет, если нет машины или работы.
+- Вызывает `CarRepository.markTaskDone(carId, taskId, today)`.
+- Добавляет в историю запись: название работы, `today`, текущий пробег машины; стоимость и сервис пустые.
+- Две записи идут подряд, без транзакции.
+
+### История и настройки
+
+| Use case | Вход | Выход | Правила |
+|---|---|---|---|
+| `ObserveHistoryUseCase` | `carId` | `Flow<List<ServiceHistoryEntry>>` | сортирует записи от новых к старым по `date` |
+| `ObserveSettingsUseCase` | — | `Flow<Settings>` | проброс `observeSettings()` |
+| `UpdateSettingsUseCase` | `settings` | — | `defaultReminderWindowKm` приводится к диапазону 1 000..9 000 км (диапазон степпера на экране настроек) |
+
+### Заготовки
+
+Классы и сигнатуры есть, методы пустые: поведение не определено, в макете для них нет экранов. Use case-ы пока не обращаются к репозиториям, хотя нужные методы в интерфейсах уже объявлены.
+
+| Use case | Сигнатура | Метод репозитория | Что нужно решить |
+|---|---|---|---|
+| `UpdateCarUseCase` | `(carId, brand, vin)` | `CarRepository.updateCar` | какие поля редактируются и где (кнопка-карандаш на экране машины) |
+| `AddTaskUseCase` | `(carId, task: NewMaintenanceTask)` | `CarRepository.addTask` | где добавляется работа у существующей машины; те же ли правила, что в `AddCarUseCase` |
+| `UpdateTaskUseCase` | `(carId, task: MaintenanceTask)` | `CarRepository.updateTask` | какие поля работы можно менять |
+| `DeleteTaskUseCase` | `(carId, taskId)` | `CarRepository.deleteTask` | нужно ли подтверждение; история при этом сохраняется |
+| `UpdateHistoryEntryUseCase` | `(entry: ServiceHistoryEntry)` | `ServiceHistoryRepository.updateEntry` | где вводятся стоимость и сервис |
+| `GetTaskRemindersUseCase` | `(today): List<TaskReminder>` — сейчас всегда пустой список | — | какие работы попадают в уведомления и правило «не чаще N дней» (этап 8) |
+
+## Открытые вопросы
+
+- Машину с пробегом 0 добавить нельзя (так в макете). Для нового авто это может быть неудобно.
+- Откуда берётся иконка работы: в модели её нет; в макете она либо зашита в данные, либо подбирается по названию.
+- Где подставляется работа по умолчанию при пустом списке работ: название локализуется, поэтому в domain его нет.
+- `MarkTaskDoneUseCase` должен стать атомарным, когда появится SQLDelight.
 
 ## Что ещё не реализовано
 
-- `domain/repository/` — интерфейсы `CarRepository`, `ServiceHistoryRepository`, `SettingsRepository`.
-- Операция «отметить работу выполненной»: обновляет у работы `lastDoneKm` и `lastDoneDate` и добавляет `ServiceHistoryEntry` в журнал.
-- Юнит-тесты на расчёт статуса.
-- Не решено, откуда берётся иконка работы: в модели её нет, в макете она либо зашита в данные, либо подбирается по названию.
+- Реализации репозиториев (сначала фейковые in-memory, затем на SQLDelight).
+- Шесть заготовок use case-ов из таблицы выше.
+- Юнит-тесты.
