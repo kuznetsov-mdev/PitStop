@@ -222,6 +222,19 @@
   .history-meta { font-family: var(--mono); font-size: 11px; color: var(--ink-muted); margin-top: 4px; display: flex; gap: 12px; flex-wrap: wrap; }
   .history-empty { padding: 48px 18px; text-align: center; color: var(--ink-faint); font-size: 13px; line-height: 1.5; }
 
+  /* ---------- Confirm dialog ---------- */
+  .dialog-scrim {
+    position: absolute; inset: 0; background: rgba(5,8,13,0.55); z-index: 30;
+    display: flex; align-items: center; justify-content: center; padding: 22px;
+  }
+  .dialog { width: 100%; background: var(--surface); border: 1px solid var(--rule); border-radius: 24px; padding: 20px 18px 18px; box-shadow: var(--shadow); }
+  .dialog-icon { width: 40px; height: 40px; border-radius: 11px; background: color-mix(in srgb, var(--tier-due) 14%, transparent); color: var(--tier-due); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+  .dialog-title { font-family: var(--display); font-weight: 800; font-size: 17px; line-height: 1.25; }
+  .dialog-text { font-size: 12.5px; color: var(--ink-muted); line-height: 1.5; margin-top: 6px; }
+  .dialog-actions { display: flex; gap: 8px; margin-top: 18px; }
+  .dialog-btn { flex: 1; border: none; border-radius: 12px; padding: 13px 10px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; text-align: center; background: var(--surface-2); color: var(--ink); }
+  .dialog-btn.danger { background: var(--tier-due); color: var(--on-tier); }
+
   /* ---------- Add car form ---------- */
   .field-label { font-size: 11.5px; font-weight: 700; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 0 18px; margin-bottom: 8px; display: block; }
   .field-label .req { color: var(--tier-due); }
@@ -389,7 +402,7 @@
       <div class="section-head"><span class="theme-dot" style="background:var(--accent);box-shadow:0 0 0 3px rgba(14,165,183,0.18)"></span><h2>Интерактивный макет</h2></div>
       <button class="theme-btn" id="themeBtn" aria-label="Переключить тему"></button>
     </div>
-    <p class="section-sub">Открывай авто, отмечай работы выполненными, правь пробег на ходу, смотри историю ТО и добавляй новое авто с готовыми пресетами работ — тема переключается кнопкой справа.</p>
+    <p class="section-sub">Открывай авто, отмечай работы выполненными, правь пробег на ходу, смотри историю ТО, добавляй новое авто с готовыми пресетами работ и удаляй авто корзиной в топ-баре (с подтверждением) — тема переключается кнопкой справа.</p>
     <div class="stage">
       <div class="route-pill" id="routeLabel">Мои авто</div>
       <div class="phone lg interactive"><div class="notch"></div><div class="screen" id="interactiveScreen"></div></div>
@@ -400,7 +413,7 @@
   <!-- ================= LIGHT EXHIBIT ================= -->
   <div class="section-block panel locked-light">
     <div class="section-head"><span class="theme-dot light"></span><h2>Экраны · светлая тема</h2></div>
-    <p class="section-sub">Статичный набор — пять ключевых экранов приложения.</p>
+    <p class="section-sub">Статичный набор — пять ключевых экранов приложения и окно подтверждения удаления авто.</p>
     <div class="gallery" id="galleryLight"></div>
   </div>
 
@@ -741,7 +754,7 @@
       </div>
 
       <div>
-        <div class="component-group-title">Карточки-контейнеры <span class="cnt">3 шт.</span></div>
+        <div class="component-group-title">Карточки-контейнеры <span class="cnt">4 шт.</span></div>
         <div class="component-grid">
           <div class="component-card">
             <div class="component-preview" style="flex-direction:column;align-items:stretch;">
@@ -760,6 +773,12 @@
               <div class="notif-preview" style="margin:0;"><div class="notif-icon"><span class="icon-slot" data-icon="bell" data-size="14"></span></div><div class="notif-body"><div class="notif-head"><span class="notif-title">Одометр</span><span class="notif-time">сейчас</span></div><div class="notif-text">Пора заменить фильтр</div></div></div>
             </div>
             <div class="component-meta"><div class="name">Превью-уведомление</div><div class="pkg">&lt;Card variant="notification" /&gt;</div><div class="note">Используется и как реальный пуш, и как статичный пример в настройках.</div></div>
+          </div>
+          <div class="component-card">
+            <div class="component-preview" style="flex-direction:column;align-items:stretch;">
+              <div class="dialog"><div class="dialog-icon"><span class="icon-slot" data-icon="trash" data-size="19"></span></div><div class="dialog-title">Удалить Kia Rio?</div><div class="dialog-text">Действие нельзя отменить.</div><div class="dialog-actions"><button class="dialog-btn">Отмена</button><button class="dialog-btn danger">Удалить</button></div></div>
+            </div>
+            <div class="component-meta"><div class="name">Диалог подтверждения</div><div class="pkg">&lt;ConfirmDialog title text confirmLabel onConfirm onDismiss /&gt;</div><div class="note">Модальное окно поверх затемнённого экрана для необратимых действий: слева отмена, справа действие цветом tier-due.</div></div>
           </div>
         </div>
       </div>
@@ -928,6 +947,19 @@
       '</div>';
   }
 
+  /* ---------------- dialog: confirm car deletion ---------------- */
+  function deleteDialogHtml(car, opts) {
+    var scrimAttr = opts.interactive ? ' data-cancel-delete' : '';
+    var cancelAttr = opts.interactive ? ' data-cancel-delete' : '';
+    var confirmAttr = opts.interactive ? ' data-confirm-delete' : '';
+    return '<div class="dialog-scrim"' + scrimAttr + '><div class="dialog" role="alertdialog" aria-modal="true">' +
+      '<div class="dialog-icon">' + icon('trash', 19) + '</div>' +
+      '<div class="dialog-title">Удалить ' + car.brand + '?</div>' +
+      '<div class="dialog-text">Авто, его регламентные работы и история ТО будут удалены. Это действие нельзя отменить.</div>' +
+      '<div class="dialog-actions"><button class="dialog-btn"' + cancelAttr + '>Отмена</button><button class="dialog-btn danger"' + confirmAttr + '>Удалить</button></div>' +
+      '</div></div>';
+  }
+
   /* ---------------- screen: car detail ---------------- */
   function detailScreenHtml(car, opts) {
     opts = opts || {};
@@ -946,6 +978,7 @@
     }).join('');
     var backAttr = opts.interactive ? ' data-back="cars"' : '';
     var histAttr = opts.interactive ? ' data-open-history' : '';
+    var deleteAttr = opts.interactive ? ' data-delete-car' : '';
     var mileageBlock;
     if (opts.interactive && opts.editingMileage) {
       mileageBlock = '<div class="stat-edit-row"><input type="number" id="mileageEditInput" value="' + car.mileageKm + '">' +
@@ -957,7 +990,7 @@
     }
     return '<div class="view" data-view="detail">' +
       '<div class="s-topbar"><button class="icon-btn"' + backAttr + '>' + icon('chevronLeft', 16) + '</button>' +
-      '<div class="icon-row"><button class="icon-btn"' + histAttr + '>' + icon('clock', 16) + '</button><button class="icon-btn">' + icon('pencil', 16) + '</button><button class="icon-btn">' + icon('trash', 16) + '</button></div></div>' +
+      '<div class="icon-row"><button class="icon-btn"' + histAttr + '>' + icon('clock', 16) + '</button><button class="icon-btn">' + icon('pencil', 16) + '</button><button class="icon-btn"' + deleteAttr + '>' + icon('trash', 16) + '</button></div></div>' +
       '<div class="detail-title">' + car.brand + '</div>' +
       '<div class="detail-vin">VIN ' + car.vin + '</div>' +
       '<div class="stat-pair">' +
@@ -965,6 +998,7 @@
       '<div class="stat-block"><div class="stat-label">Скоро / просрочено</div><div class="stat-num" style="color:' + tierVar(worstStatus(a)) + '"><span>' + a.total + ' из ' + a.count + '</span></div></div>' +
       '</div>' +
       '<div class="task-list">' + rows + '</div>' +
+      (opts.confirmDelete ? deleteDialogHtml(car, opts) : '') +
       '</div>';
   }
 
@@ -1126,7 +1160,8 @@
       phoneWrap('02', 'Добавление авто', newScreenHtml({ interactive: false }, [{ n: 1 }])) +
       phoneWrap('03', 'Регламентные работы', detailScreenHtml(cars[0], { interactive: false })) +
       phoneWrap('04', 'История ТО', historyScreenHtml(cars[0], { interactive: false })) +
-      phoneWrap('05', 'Настройки', settingsScreenHtml(settingsState, { interactive: false }));
+      phoneWrap('05', 'Настройки', settingsScreenHtml(settingsState, { interactive: false })) +
+      phoneWrap('06', 'Удаление авто', detailScreenHtml(cars[0], { interactive: false, confirmDelete: true }));
   }
   renderStaticGallery('galleryLight');
   renderStaticGallery('galleryDark');
@@ -1134,7 +1169,7 @@
   /* ================= interactive copy ================= */
   var cars = cloneCars();
   var istate = {
-    screen: 'cars', detailId: null, editingMileage: false,
+    screen: 'cars', detailId: null, editingMileage: false, confirmDelete: false,
     taskBlocks: [{ n: 1 }], nextBlockN: 2,
     settings: { themeIdx: 0, unitsIdx: 0, pushOn: true, reminderDefault: 2, reminderTime: '09:00' }
   };
@@ -1144,10 +1179,11 @@
   var routeNames = { cars: 'Мои авто', detail: 'Регламентные работы', history: 'История ТО', new: 'Добавление авто', settings: 'Настройки' };
   function paintInteractive() {
     var root = document.getElementById('interactiveScreen');
+    var detailCar = currentDetailCar();
     root.innerHTML =
       carsScreenHtml(cars, { interactive: true }) +
-      detailScreenHtml(currentDetailCar(), { interactive: true, editingMileage: istate.editingMileage }) +
-      historyScreenHtml(currentDetailCar(), { interactive: true }) +
+      (detailCar ? detailScreenHtml(detailCar, { interactive: true, editingMileage: istate.editingMileage, confirmDelete: istate.confirmDelete }) : '') +
+      (detailCar ? historyScreenHtml(detailCar, { interactive: true }) : '') +
       newScreenHtml({ interactive: true }, istate.taskBlocks) +
       settingsScreenHtml(istate.settings, { interactive: true });
     root.parentElement.classList.add('interactive');
@@ -1163,7 +1199,7 @@
 
     root.querySelectorAll('[data-open-car]').forEach(function (row) {
       row.addEventListener('click', function () {
-        istate.detailId = row.getAttribute('data-open-car'); istate.editingMileage = false; istate.screen = 'detail'; paintInteractive();
+        istate.detailId = row.getAttribute('data-open-car'); istate.editingMileage = false; istate.confirmDelete = false; istate.screen = 'detail'; paintInteractive();
       });
     });
     root.querySelectorAll('[data-open-new]').forEach(function (b) {
@@ -1177,6 +1213,22 @@
     });
     var openHistoryBtn = root.querySelector('[data-open-history]');
     if (openHistoryBtn) openHistoryBtn.addEventListener('click', function () { istate.screen = 'history'; paintInteractive(); });
+
+    /* --- delete car with confirmation --- */
+    var deleteCarBtn = root.querySelector('[data-delete-car]');
+    if (deleteCarBtn) deleteCarBtn.addEventListener('click', function () { istate.confirmDelete = true; paintInteractive(); });
+    root.querySelectorAll('[data-cancel-delete]').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        if (e.target !== el) return;
+        istate.confirmDelete = false; paintInteractive();
+      });
+    });
+    var confirmDeleteBtn = root.querySelector('[data-confirm-delete]');
+    if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', function () {
+      var id = currentDetailCar().id;
+      cars = cars.filter(function (c) { return c.id !== id; });
+      istate.confirmDelete = false; istate.detailId = null; istate.screen = 'cars'; paintInteractive();
+    });
 
     /* --- quick mileage edit --- */
     var editMileageBtn = root.querySelector('[data-edit-mileage]');
