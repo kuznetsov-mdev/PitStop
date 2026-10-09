@@ -19,15 +19,17 @@ import ru.kuznetsov.pitstop.ui.theme.PitStopTheme
 
 /**
  * Thin fill track — share of the maintenance interval already used up, [value] in 0..1.
- * The fill color follows the value: up to 60% — ok, up to 90% — soon, above — due.
+ * The fill color follows the value: up to 60% — ok, up to 90% — soon, above — due;
+ * pass [tier] to color the fill by an already known status instead.
  */
 @Composable
 fun ProgressBar(
     value: Float,
     modifier: Modifier = Modifier,
+    tier: StatusTier? = null,
 ) {
     val fraction = value.coerceIn(0f, 1f)
-    val tier = when {
+    val fillTier = tier ?: when {
         fraction <= 0.6f -> StatusTier.Ok
         fraction <= 0.9f -> StatusTier.Soon
         else -> StatusTier.Due
@@ -45,7 +47,7 @@ fun ProgressBar(
                 .fillMaxWidth(fraction)
                 .fillMaxHeight()
                 .clip(shape)
-                .background(tier.color),
+                .background(fillTier.color),
         )
     }
 }
