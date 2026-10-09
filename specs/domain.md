@@ -141,7 +141,7 @@ Settings ──▶ ThemeMode, DistanceUnit        (от машин не зави
 
 ## Репозитории
 
-Интерфейсы в `domain/repository/`. Чтение — `Flow`, который переизлучает данные при каждом изменении; изменение — `suspend`-методы. Реализаций пока нет.
+Интерфейсы в `domain/repository/`. Чтение — `Flow`, который переизлучает данные при каждом изменении; изменение — `suspend`-методы. Реализации пока фейковые, in-memory (`data/repository/Fake*RepositoryImpl`).
 
 ### `CarRepository`
 
@@ -285,6 +285,6 @@ Toyota Camry, пробег 152 000 км, сегодня 08.10.2026.
 
 ## Что ещё не реализовано
 
-- Реализации репозиториев (сначала фейковые in-memory, затем на SQLDelight).
+- Реализации репозиториев на SQLDelight (сейчас — фейковые in-memory).
 - Шесть заготовок use case-ов из таблицы выше.
-- Юнит-тесты.
+- Юнит-тесты на всё, кроме `CalculateTaskStatusUseCase` (он покрыт `CalculateTaskStatusUseCaseTest`).

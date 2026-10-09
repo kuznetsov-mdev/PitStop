@@ -106,17 +106,17 @@ ViewModel-ы — `StateFlow<UiState>`, экран подписывается ч�
 ### Этап 4 — DI (Koin)
 - ✅ Подключить `io.insert-koin:koin-bom:4.2.2` + `koin-core`, `koin-compose`, `koin-compose-viewmodel` — alias'ы в каталог, зависимости в `commonMain.dependencies`. Проверено на Android (`:androidApp:assembleDebug`) и iOS (`:shared:compileKotlinIosSimulatorArm64`).
 - ✅ `di/` — `featureModule` (все зависимости для UI)/`domainModule`/`dataModule`, каждый в своём файле (`FeatureModule.kt`, `DomainModule.kt`, `DataModule.kt`), и `initKoin()` в `Koin.kt`. *Модули пока пустые. `initKoin()` вызывается из `PitStopApplication.onCreate()` (Android, класс зарегистрирован в манифесте) и из `iOSApp.init()` (iOS; в Swift функция называется `KoinKt.doInitKoin()`). Проверено запуском на Android-устройстве и в iOS-симуляторе.*
-- ⬜ Зарегистрировать в `dataModule` **фейковые** реализации репозиториев (см. этап 5) — реальные появятся на этапе 7 без изменений в `di`-API, только подменой binding'а. *Выполняется вместе с этапом 5: до него нет ни интерфейсов репозиториев, ни фейков.*
+- ✅ Зарегистрировать в `dataModule` **фейковые** реализации репозиториев (см. этап 5) — реальные появятся на этапе 7 без изменений в `di`-API, только подменой binding'а. *Сделано вместе с этапом 5: три `Fake*RepositoryImpl` зарегистрированы как `single` с привязкой к domain-интерфейсам.*
 
 *Почему именно сейчас: экраны (этап 6) с первого дня инжектят `ViewModel` через `koinViewModel()`, как подтверждено пользователем.*
 
 ### Этап 5 — Domain-модели и бизнес-логика + фейковые данные
-- ⬜ Подключить `org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0` (явный `Flow` в репозиториях) и `org.jetbrains.kotlinx:kotlinx-datetime:0.8.0` (разница дат для интервала по месяцам) в `commonMain.dependencies`.
-- ⬜ `domain/model/` — `Car`, `MaintenanceTask`, `ServiceHistoryEntry`, `TaskStatus` (OK/SOON/DUE), `TaskStat`.
-- ⬜ `domain/usecase/` — перенос JS-логики из макета 1:1 на Kotlin: `CalculateTaskStatusUseCase` (аналог `taskStat`/`worseStatus`), `SortedTaskStatsUseCase` (`sortedTaskStats`), `CarAlertsUseCase`/`worstStatus` — чистые функции, без зависимости от data-слоя.
-- ⬜ `domain/repository/` — интерфейсы `CarRepository`, `ServiceHistoryRepository`, `SettingsRepository` (методы возвращают `Flow<...>`).
-- ⬜ `data/repository/Fake*RepositoryImpl` — in-memory реализация, засеянная теми же тремя машинами (Kia Rio/Toyota Camry/Hyundai Solaris), что и в макете; регистрируется в `dataModule` (этап 4).
-- ⬜ Юнит-тесты в `commonTest` на `CalculateTaskStatusUseCase`: статус по км, по времени, "что раньше" — закрывает требование плана `.md` "перенос расчёта статуса из JS в Kotlin + unit-тесты" ещё до того, как появится UI.
+- ✅ Подключить `org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0` (явный `Flow` в репозиториях) и `org.jetbrains.kotlinx:kotlinx-datetime:0.8.0` (разница дат для интервала по месяцам) в `commonMain.dependencies`.
+- ✅ `domain/model/` — `Car`, `MaintenanceTask`, `ServiceHistoryEntry`, `TaskStatus` (OK/SOON/DUE), `TaskStat`.
+- ✅ `domain/usecase/` — перенос JS-логики из макета 1:1 на Kotlin: `CalculateTaskStatusUseCase` (аналог `taskStat`/`worseStatus`), `SortedTaskStatsUseCase` (`sortedTaskStats`), `CarAlertsUseCase`/`worstStatus` — чистые функции, без зависимости от data-слоя.
+- ✅ `domain/repository/` — интерфейсы `CarRepository`, `ServiceHistoryRepository`, `SettingsRepository` (методы возвращают `Flow<...>`).
+- ✅ `data/repository/Fake*RepositoryImpl` — in-memory реализация, засеянная теми же тремя машинами (Kia Rio/Toyota Camry/Hyundai Solaris), что и в макете; регистрируется в `dataModule` (этап 4).
+- ✅ Юнит-тесты в `commonTest` на `CalculateTaskStatusUseCase`: статус по км, по времени, "что раньше" — закрывает требование плана `.md` "перенос расчёта статуса из JS в Kotlin + unit-тесты" ещё до того, как появится UI. *`CalculateTaskStatusUseCaseTest` — 23 теста, зелёные на `:shared:testAndroidHostTest` и `:shared:iosSimulatorArm64Test`.*
 
 ### Этап 6 — Вёрстка экранов (на фейковых данных)
 **Библиотеки:** не требуются — все уже подключены на этапах 2–5.
