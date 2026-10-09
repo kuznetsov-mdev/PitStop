@@ -27,15 +27,13 @@ import androidx.navigation.navArgument
 import androidx.savedstate.read
 import org.jetbrains.compose.resources.stringResource
 import pitstop.shared.generated.resources.Res
-import pitstop.shared.generated.resources.action_save_car
-import pitstop.shared.generated.resources.screen_add_car
-import pitstop.shared.generated.resources.screen_car_detail
-import pitstop.shared.generated.resources.screen_history
 import pitstop.shared.generated.resources.tab_cars
 import pitstop.shared.generated.resources.tab_settings
+import ru.kuznetsov.pitstop.features.addcar.AddCarScreen
+import ru.kuznetsov.pitstop.features.cardetail.CarDetailScreen
 import ru.kuznetsov.pitstop.features.cars.CarsScreen
+import ru.kuznetsov.pitstop.features.history.HistoryScreen
 import ru.kuznetsov.pitstop.features.settings.SettingsScreen
-import ru.kuznetsov.pitstop.ui.components.buttons.PrimaryButton
 import ru.kuznetsov.pitstop.ui.components.buttons.TabBarItem
 import ru.kuznetsov.pitstop.ui.icons.PitStopIcons
 import ru.kuznetsov.pitstop.ui.theme.PitStopTheme
@@ -70,37 +68,18 @@ fun PitStopNavGraph(modifier: Modifier = Modifier) {
                 )
             }
             composable(Destination.AddCar.route) {
-                PlaceholderScreen(
-                    title = stringResource(Res.string.screen_add_car),
-                    onBack = { navController.popBackStack() },
-                ) {
-                    PrimaryButton(
-                        text = stringResource(Res.string.action_save_car),
-                        onClick = { navController.popBackStack() },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
+                AddCarScreen(onBack = { navController.popBackStack() })
             }
             composable(Destination.CarDetail.route, arguments = carIdArgument) { entry ->
                 val carId = entry.carId
-                PlaceholderScreen(
-                    title = stringResource(Res.string.screen_car_detail),
-                    subtitle = carId,
-                    onBack = { navController.popBackStack() },
-                ) {
-                    PrimaryButton(
-                        text = stringResource(Res.string.screen_history),
-                        onClick = { navController.navigate(Destination.History.createRoute(carId)) },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
+                CarDetailScreen(
+                    carId = carId,
+                    onBack = { navController.popBackStack(Destination.Cars.route, inclusive = false) },
+                    onOpenHistory = { navController.navigate(Destination.History.createRoute(carId)) },
+                )
             }
             composable(Destination.History.route, arguments = carIdArgument) { entry ->
-                PlaceholderScreen(
-                    title = stringResource(Res.string.screen_history),
-                    subtitle = entry.carId,
-                    onBack = { navController.popBackStack() },
-                )
+                HistoryScreen(carId = entry.carId, onBack = { navController.popBackStack() })
             }
             composable(Destination.Settings.route) {
                 SettingsScreen()
