@@ -23,7 +23,10 @@ ru.kuznetsov.pitstop/
 │   │   ├── fields/       # AppTextField, AppNumberField, LabeledMiniField, InlineEditField
 │   │   ├── steppers/     # Stepper
 │   │   ├── indicators/   # AppSwitch, StatusChip, ProgressBar, GaugeRing
-│   │   └── cards/        # ListRowCard, StatCard, NotificationPreviewCard
+│   │   ├── cards/        # ListRowCard, StatCard, NotificationPreviewCard
+│   │   ├── dialogs/      # ConfirmDialog
+│   │   └── screen/       # ScreenTopBar, ScreenTitle — общая шапка экранов
+│   ├── format/        # форматирование чисел/дат/расстояний, TaskStatus → StatusTier
 │   └── icons/         # PitStopIcons.kt — иконки из макета как ImageVector
 ├── domain/
 │   ├── model/         # Car, MaintenanceTask, ServiceHistoryEntry, TaskStatus, TaskStat
@@ -33,6 +36,7 @@ ru.kuznetsov.pitstop/
 │   ├── local/          # SQLDelight driver (expect/actual), .sq-схемы
 │   ├── repository/     # Fake*RepositoryImpl (этап 5) → *RepositoryImpl на SQLDelight (этап 7)
 │   └── mapper/         # маппинг SQLDelight-строк ↔ domain-модели
+├── AppViewModel.kt    # тема из настроек для корневого `App`
 ├── di/                # Koin: FeatureModule.kt, DomainModule.kt, DataModule.kt (по модулю на файл) + Koin.kt (initKoin)
 └── features/
     ├── navigation/      # Destinations, NavGraph
@@ -90,6 +94,9 @@ ViewModel-ы — `StateFlow<UiState>`, экран подписывается ч�
 - ✅ `StatCard`
 - ✅ `NotificationPreviewCard`
 
+Диалоги (`ui.components.dialogs`):
+- ✅ `ConfirmDialog` — модальное окно подтверждения необратимого действия по макету (экран 06 «Удаление авто»): иконка, заголовок, текст, слева «Отмена», справа действие цветом `tierDue`. *Добавлен в макет после этапа 2; реализован вместе с экраном `cardetail` на этапе 6.*
+
 Локализация:
 - ✅ Строки вынесены в `composeResources/values*/strings.xml`: английский — по умолчанию (`values`), русский (`values-ru`) и испанский (`values-es`) — дополнительно. В коде — `stringResource(Res.string.*)`, язык берётся из системной локали. Для iOS языки объявлены в `Info.plist` (`CFBundleLocalizations`). Новые строки сразу добавляются во все три файла.
 
@@ -120,12 +127,13 @@ ViewModel-ы — `StateFlow<UiState>`, экран подписывается ч�
 
 ### Этап 6 — Вёрстка экранов (на фейковых данных)
 **Библиотеки:** не требуются — все уже подключены на этапах 2–5.
-- ⬜ `features/cars/` — список авто (`ui-kit` карточки + `GaugeRing`), `CarsViewModel: StateFlow<CarsUiState>`.
-- ⬜ `features/addcar/` — форма + preset-чипы, `AddCarViewModel`.
-- ⬜ `features/cardetail/` — список работ, инлайн-правка пробега, "отметить выполненной", `CarDetailViewModel`.
-- ⬜ `features/history/` — список истории ТО, `HistoryViewModel`.
-- ⬜ `features/settings/` — тема/единицы/push, `SettingsViewModel` (состояние пока в памяти — персистентность появится на этапе 7 вместе с остальными данными).
-- ⬜ Проверка: ручной прогон на Android-эмуляторе (и по возможности iOS-симуляторе) по всем 5 экранам на фейковых данных — соответствует этапам 3–7 исходного `План_разработки_Одометр.md`.
+- ✅ `features/cars/` — список авто (`ui-kit` карточки + `GaugeRing`), `CarsViewModel: StateFlow<CarsUiState>`.
+- ✅ `features/addcar/` — форма + preset-чипы, `AddCarViewModel`.
+- ✅ `features/cardetail/` — список работ, инлайн-правка пробега, "отметить выполненной", `CarDetailViewModel`.
+- ✅ Удаление авто с подтверждением: корзина в топ-баре `cardetail` открывает `ConfirmDialog` («Удалить {марка}?»); «Удалить» вызывает `DeleteCarUseCase` (машина, её работы и история ТО) и возвращает на список авто, «Отмена» и тап по затемнению закрывают окно.
+- ✅ `features/history/` — список истории ТО, `HistoryViewModel`.
+- ✅ `features/settings/` — тема/единицы/push, `SettingsViewModel` (состояние пока в памяти — персистентность появится на этапе 7 вместе с остальными данными).
+- ⬜ Проверка: ручной прогон на Android-эмуляторе (и по возможности iOS-симуляторе) по всем 5 экранам и окну подтверждения удаления на фейковых данных — соответствует этапам 3–7 исходного `План_разработки_Одометр.md`.
 
 ### Этап 7 — Реальное хранилище (SQLDelight) и связка presentation ↔ data через domain
 - ⬜ Подключить `app.cash.sqldelight` plugin `2.4.0` (`apply false` в корневом `build.gradle.kts`, применяется в `shared/build.gradle.kts`) + `app.cash.sqldelight:runtime`, `coroutines-extensions` (`commonMain`), `android-driver` (`androidMain`), `native-driver` (`iosMain`).
